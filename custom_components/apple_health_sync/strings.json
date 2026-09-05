@@ -1,0 +1,121 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Eigenpuls",
+        "description": "This creates a webhook URL and an access token for the Eigenpuls iOS app. The token is shown once, on the next screen. Store it in the app straight away — it cannot be displayed again."
+      }
+    },
+    "abort": {
+      "already_configured": "Eigenpuls is already set up."
+    },
+    "create_entry": {
+      "default": "Enter these two values in the Eigenpuls app under Connection:\n\nURL: {url}\n\nToken: {token}\n\nThe token is not shown again. If you lose it, delete this entry and add the integration again."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "heart_rate": {
+        "name": "Heart Rate"
+      },
+      "steps_today": {
+        "name": "Steps Today"
+      },
+      "last_sync": {
+        "name": "Last Sync"
+      },
+      "resting_heart_rate": {
+        "name": "Resting Heart Rate"
+      },
+      "hrv_sdnn": {
+        "name": "Heart Rate Variability"
+      },
+      "respiratory_rate": {
+        "name": "Respiratory Rate"
+      },
+      "oxygen_saturation": {
+        "name": "Blood Oxygen"
+      },
+      "active_energy_today": {
+        "name": "Active Energy Today"
+      },
+      "distance_today": {
+        "name": "Distance Today"
+      },
+      "sleep_total": {
+        "name": "Sleep Duration"
+      },
+      "sleep_rem": {
+        "name": "REM Sleep"
+      },
+      "sleep_core": {
+        "name": "Core Sleep"
+      },
+      "sleep_deep": {
+        "name": "Deep Sleep"
+      },
+      "sleep_awake": {
+        "name": "Awake During Sleep"
+      },
+      "sleep_start": {
+        "name": "Sleep Start"
+      },
+      "sleep_wake": {
+        "name": "Wake Time"
+      },
+      "nap_total": {
+        "name": "Nap Duration"
+      },
+      "sleep_7d_total": {
+        "name": "Sleep Duration 7-Day Average"
+      },
+      "sleep_7d_rem": {
+        "name": "REM Sleep 7-Day Average"
+      },
+      "sleep_7d_deep": {
+        "name": "Deep Sleep 7-Day Average"
+      },
+      "sleep_7d_bedtime": {
+        "name": "Bedtime 7-Day Average"
+      },
+      "sleep_7d_consistency": {
+        "name": "Bedtime Consistency"
+      },
+      "body_mass": {
+        "name": "Body Mass"
+      },
+      "body_fat": {
+        "name": "Body Fat"
+      },
+      "vo2_max": {
+        "name": "VO2 max"
+      },
+      "blood_pressure": {
+        "name": "Blood Pressure"
+      },
+      "blood_pressure_7d": {
+        "name": "Blood Pressure 7-Day Average"
+      },
+      "blood_pressure_30d": {
+        "name": "Blood Pressure 30-Day Average"
+      },
+      "last_workout": {
+        "name": "Last Workout",
+        "state": {
+          "walking": "Walking",
+          "running": "Running",
+          "cycling": "Cycling",
+          "strength_training": "Strength Training",
+          "functional_strength": "Functional Strength Training",
+          "hiit": "HIIT",
+          "hiking": "Hiking",
+          "swimming": "Swimming",
+          "rowing": "Rowing",
+          "elliptical": "Elliptical",
+          "yoga": "Yoga",
+          "other": "Other"
+        }
+      }
+    }
+  }
+}

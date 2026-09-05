@@ -1,0 +1,20 @@
+# Explicit ruff configuration for the receiver.
+#
+# `required-version` is pinned on purpose. Ruff's default rule set widens between
+# minor releases, so without a pin an unrelated upgrade turns CI red and trains
+# people to ignore the gate. Widening the rule set should be a decision, not a
+# side effect of `pip install -U`.
+required-version = ">=0.16,<0.17"
+
+[lint.per-file-ignores]
+# payload.py is the wire-format parser. Both suppressions below are deliberate
+# design, not debt:
+#
+# TRY004 - the parser raises ValueError carrying a *reason code* ("bad_value",
+#   "missing_field"). Those codes are part of the receiver's rejection contract
+#   and are echoed back to the client, so every parse failure must be one
+#   exception type. Splitting some of them into TypeError would break that
+#   contract for no benefit.
+#
+# PLR0124 - `value != value` is the NaN test. It is correct and intentional.
+"custom_components/apple_health_sync/payload.py" = ["TRY004", "PLR0124"]

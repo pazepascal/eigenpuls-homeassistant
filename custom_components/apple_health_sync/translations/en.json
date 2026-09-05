@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Eigenpuls",
+        "description": "This creates a webhook URL and an access token for the Eigenpuls iOS app. The token is shown once, on the next screen. Store it in the app straight away — it cannot be displayed again."
+      }
+    },
+    "abort": {
+      "already_configured": "Eigenpuls is already set up."
+    },
+    "create_entry": {
+      "default": "Enter these two values in the Eigenpuls app under Connection:\n\nURL: {url}\n\nToken: {token}\n\nThe token is not shown again. If you lose it, delete this entry and add the integration again."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "heart_rate": {
+        "name": "Heart Rate"
+      },
+      "steps_today": {
+        "name": "Steps Today"
+      },
+      "last_sync": {
+        "name": "Last Sync"
+      }
+    }
+  }
+}

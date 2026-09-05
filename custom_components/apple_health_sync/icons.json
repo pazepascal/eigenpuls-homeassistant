@@ -1,0 +1,93 @@
+{
+  "entity": {
+    "sensor": {
+      "heart_rate": {
+        "default": "mdi:heart-pulse"
+      },
+      "steps_today": {
+        "default": "mdi:walk"
+      },
+      "last_sync": {
+        "default": "mdi:cloud-check-variant"
+      },
+      "resting_heart_rate": {
+        "default": "mdi:heart"
+      },
+      "hrv_sdnn": {
+        "default": "mdi:heart-flash"
+      },
+      "respiratory_rate": {
+        "default": "mdi:lungs"
+      },
+      "oxygen_saturation": {
+        "default": "mdi:water-percent"
+      },
+      "active_energy_today": {
+        "default": "mdi:fire"
+      },
+      "distance_today": {
+        "default": "mdi:map-marker-distance"
+      },
+      "sleep_total": {
+        "default": "mdi:sleep"
+      },
+      "sleep_rem": {
+        "default": "mdi:brain"
+      },
+      "sleep_core": {
+        "default": "mdi:weather-night"
+      },
+      "sleep_deep": {
+        "default": "mdi:sleep"
+      },
+      "sleep_awake": {
+        "default": "mdi:sleep-off"
+      },
+      "sleep_start": {
+        "default": "mdi:bed-clock"
+      },
+      "sleep_wake": {
+        "default": "mdi:alarm"
+      },
+      "nap_total": {
+        "default": "mdi:power-sleep"
+      },
+      "sleep_7d_total": {
+        "default": "mdi:chart-line"
+      },
+      "sleep_7d_rem": {
+        "default": "mdi:chart-line"
+      },
+      "sleep_7d_deep": {
+        "default": "mdi:chart-line"
+      },
+      "sleep_7d_bedtime": {
+        "default": "mdi:bed-clock"
+      },
+      "sleep_7d_consistency": {
+        "default": "mdi:sine-wave"
+      },
+      "body_mass": {
+        "default": "mdi:scale-bathroom"
+      },
+      "body_fat": {
+        "default": "mdi:percent-outline"
+      },
+      "blood_pressure": {
+        "default": "mdi:heart-plus-outline"
+      },
+      "blood_pressure_7d": {
+        "default": "mdi:chart-line"
+      },
+      "blood_pressure_30d": {
+        "default": "mdi:chart-line"
+      },
+      "last_workout": {
+        "default": "mdi:dumbbell"
+      },
+      "vo2_max": {
+        "default": "mdi:lungs"
+      }
+    }
+  }
+}

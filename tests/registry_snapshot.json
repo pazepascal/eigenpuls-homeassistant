@@ -1,0 +1,231 @@
+{
+  "_comment": "Frozen registry semantics. Adding a metric is allowed and needs no change here beyond a new entry. Removing one, or changing the statistic id, family, unit, unit class, mean type or sum flag of an existing one, is a breaking change for every installation that already holds those long-term statistics - and Home Assistant statistics cannot be rolled back. tests/test_registry_freeze.py enforces this.",
+  "wire_metrics": {
+    "active_energy": {
+      "statistic_id": "apple_health_sync:active_energy",
+      "kind": "daily_cumulative",
+      "unit": "kcal",
+      "unit_class": "energy",
+      "mean_type": "none",
+      "has_sum": true
+    },
+    "blood_pressure_diastolic": {
+      "statistic_id": "apple_health_sync:blood_pressure_diastolic",
+      "kind": "hourly_discrete",
+      "unit": "mmHg",
+      "unit_class": "pressure",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "blood_pressure_systolic": {
+      "statistic_id": "apple_health_sync:blood_pressure_systolic",
+      "kind": "hourly_discrete",
+      "unit": "mmHg",
+      "unit_class": "pressure",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "body_fat_percentage": {
+      "statistic_id": "apple_health_sync:body_fat_percentage",
+      "kind": "hourly_discrete",
+      "unit": "%",
+      "unit_class": "unitless",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "body_mass": {
+      "statistic_id": "apple_health_sync:body_mass",
+      "kind": "hourly_discrete",
+      "unit": "kg",
+      "unit_class": "mass",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "distance_walking_running": {
+      "statistic_id": "apple_health_sync:distance",
+      "kind": "daily_cumulative",
+      "unit": "km",
+      "unit_class": "distance",
+      "mean_type": "none",
+      "has_sum": true
+    },
+    "heart_rate": {
+      "statistic_id": "apple_health_sync:heart_rate",
+      "kind": "hourly_discrete",
+      "unit": "bpm",
+      "unit_class": null,
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "hrv_sdnn": {
+      "statistic_id": "apple_health_sync:hrv_sdnn",
+      "kind": "daily_discrete",
+      "unit": "ms",
+      "unit_class": "duration",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "nap_count": {
+      "statistic_id": "apple_health_sync:nap_count",
+      "kind": "daily_discrete",
+      "unit": "naps",
+      "unit_class": null,
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "nap_total": {
+      "statistic_id": "apple_health_sync:nap_total",
+      "kind": "daily_discrete",
+      "unit": "min",
+      "unit_class": "duration",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "oxygen_saturation": {
+      "statistic_id": "apple_health_sync:oxygen_saturation",
+      "kind": "daily_discrete",
+      "unit": "%",
+      "unit_class": "unitless",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "respiratory_rate": {
+      "statistic_id": "apple_health_sync:respiratory_rate",
+      "kind": "daily_discrete",
+      "unit": "breaths/min",
+      "unit_class": null,
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "resting_heart_rate": {
+      "statistic_id": "apple_health_sync:resting_heart_rate",
+      "kind": "daily_discrete",
+      "unit": "bpm",
+      "unit_class": null,
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "steps": {
+      "statistic_id": "apple_health_sync:steps_daily",
+      "kind": "daily_cumulative",
+      "unit": "steps",
+      "unit_class": null,
+      "mean_type": "none",
+      "has_sum": true
+    },
+    "vo2_max": {
+      "statistic_id": "apple_health_sync:vo2_max",
+      "kind": "hourly_discrete",
+      "unit": "ml/kg/min",
+      "unit_class": null,
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "workout_count": {
+      "statistic_id": "apple_health_sync:workout_count",
+      "kind": "daily_cumulative",
+      "unit": "workouts",
+      "unit_class": null,
+      "mean_type": "none",
+      "has_sum": true
+    },
+    "workout_duration": {
+      "statistic_id": "apple_health_sync:workout_duration",
+      "kind": "daily_cumulative",
+      "unit": "min",
+      "unit_class": "duration",
+      "mean_type": "none",
+      "has_sum": true
+    },
+    "workout_energy": {
+      "statistic_id": "apple_health_sync:workout_energy",
+      "kind": "daily_cumulative",
+      "unit": "kcal",
+      "unit_class": "energy",
+      "mean_type": "none",
+      "has_sum": true
+    }
+  },
+  "sleep_series": {
+    "awake_min": {
+      "statistic_id": "apple_health_sync:sleep_awake",
+      "kind": "nightly_sleep",
+      "unit": "min",
+      "unit_class": "duration",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "core_min": {
+      "statistic_id": "apple_health_sync:sleep_core",
+      "kind": "nightly_sleep",
+      "unit": "min",
+      "unit_class": "duration",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "deep_min": {
+      "statistic_id": "apple_health_sync:sleep_deep",
+      "kind": "nightly_sleep",
+      "unit": "min",
+      "unit_class": "duration",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "rem_min": {
+      "statistic_id": "apple_health_sync:sleep_rem",
+      "kind": "nightly_sleep",
+      "unit": "min",
+      "unit_class": "duration",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "sleep_start_offset_min": {
+      "statistic_id": "apple_health_sync:sleep_start_offset",
+      "kind": "nightly_sleep",
+      "unit": "min",
+      "unit_class": "duration",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "total_sleep_min": {
+      "statistic_id": "apple_health_sync:sleep_total",
+      "kind": "nightly_sleep",
+      "unit": "min",
+      "unit_class": "duration",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "wake_offset_min": {
+      "statistic_id": "apple_health_sync:sleep_wake_offset",
+      "kind": "nightly_sleep",
+      "unit": "min",
+      "unit_class": "duration",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    }
+  },
+  "derived_series": {
+    "blood_pressure_count": {
+      "statistic_id": "apple_health_sync:blood_pressure_count",
+      "kind": "hourly_discrete",
+      "unit": "measurements",
+      "unit_class": null,
+      "mean_type": "arithmetic",
+      "has_sum": false
+    }
+  },
+  "workout_activities": [
+    "walking",
+    "running",
+    "cycling",
+    "strength_training",
+    "functional_strength",
+    "hiit",
+    "hiking",
+    "swimming",
+    "rowing",
+    "elliptical",
+    "yoga",
+    "other"
+  ]
+}

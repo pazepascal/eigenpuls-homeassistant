@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+.DS_Store
+
+# Captured payloads and logs can contain real health values.
+*.log
+payload-capture*.json

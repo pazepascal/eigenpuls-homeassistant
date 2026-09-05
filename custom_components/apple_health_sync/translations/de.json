@@ -1,0 +1,121 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Eigenpuls",
+        "description": "Hierbei werden eine Webhook-URL und ein Zugriffstoken für die Eigenpuls-App erzeugt. Das Token wird nur einmal auf dem nächsten Bildschirm angezeigt. Trage es sofort in der App ein — es kann nicht erneut angezeigt werden."
+      }
+    },
+    "abort": {
+      "already_configured": "Eigenpuls ist bereits eingerichtet."
+    },
+    "create_entry": {
+      "default": "Trage diese beiden Werte in der Eigenpuls-App unter Verbindung ein:\n\nURL: {url}\n\nToken: {token}\n\nDas Token wird nicht erneut angezeigt. Wenn es verloren geht, lösche diesen Eintrag und füge die Integration erneut hinzu."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "heart_rate": {
+        "name": "Herzfrequenz"
+      },
+      "steps_today": {
+        "name": "Schritte heute"
+      },
+      "last_sync": {
+        "name": "Letzte Synchronisierung"
+      },
+      "resting_heart_rate": {
+        "name": "Ruheherzfrequenz"
+      },
+      "hrv_sdnn": {
+        "name": "Herzfrequenzvariabilität"
+      },
+      "respiratory_rate": {
+        "name": "Atemfrequenz"
+      },
+      "oxygen_saturation": {
+        "name": "Blutsauerstoff"
+      },
+      "active_energy_today": {
+        "name": "Aktive Energie heute"
+      },
+      "distance_today": {
+        "name": "Distanz heute"
+      },
+      "sleep_total": {
+        "name": "Schlafdauer"
+      },
+      "sleep_rem": {
+        "name": "REM-Schlaf"
+      },
+      "sleep_core": {
+        "name": "Kernschlaf"
+      },
+      "sleep_deep": {
+        "name": "Tiefschlaf"
+      },
+      "sleep_awake": {
+        "name": "Wachzeit im Schlaf"
+      },
+      "sleep_start": {
+        "name": "Einschlafzeit"
+      },
+      "sleep_wake": {
+        "name": "Aufwachzeit"
+      },
+      "nap_total": {
+        "name": "Nickerchen-Dauer"
+      },
+      "sleep_7d_total": {
+        "name": "Schlafdauer Ø 7 Tage"
+      },
+      "sleep_7d_rem": {
+        "name": "REM-Schlaf Ø 7 Tage"
+      },
+      "sleep_7d_deep": {
+        "name": "Tiefschlaf Ø 7 Tage"
+      },
+      "sleep_7d_bedtime": {
+        "name": "Einschlafzeit Ø 7 Tage"
+      },
+      "sleep_7d_consistency": {
+        "name": "Schlafrhythmus-Konstanz"
+      },
+      "body_mass": {
+        "name": "Gewicht"
+      },
+      "body_fat": {
+        "name": "Körperfett"
+      },
+      "vo2_max": {
+        "name": "VO₂max"
+      },
+      "blood_pressure": {
+        "name": "Blutdruck"
+      },
+      "blood_pressure_7d": {
+        "name": "Blutdruck Ø 7 Tage"
+      },
+      "blood_pressure_30d": {
+        "name": "Blutdruck Ø 30 Tage"
+      },
+      "last_workout": {
+        "name": "Letztes Training",
+        "state": {
+          "walking": "Gehen",
+          "running": "Laufen",
+          "cycling": "Radfahren",
+          "strength_training": "Krafttraining",
+          "functional_strength": "Funktionelles Krafttraining",
+          "hiit": "HIIT",
+          "hiking": "Wandern",
+          "swimming": "Schwimmen",
+          "rowing": "Rudern",
+          "elliptical": "Crosstrainer",
+          "yoga": "Yoga",
+          "other": "Sonstiges"
+        }
+      }
+    }
+  }
+}
