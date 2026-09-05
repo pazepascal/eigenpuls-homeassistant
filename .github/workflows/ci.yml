@@ -31,11 +31,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: hacs/action@main
+
+      # HACS only works with public repositories - that is stated in its own
+      # publishing documentation, and the validator behaves accordingly: while this
+      # repository is private it cannot read hacs.json or manifest.json and reports
+      # both as missing. That is a property of the check, not a defect here.
+      #
+      # So the job is conditional on visibility rather than disabled. It costs
+      # nothing while private and turns itself on the moment the repository is made
+      # public, which is better than a comment asking someone to remember.
+      - name: HACS validation
+        if: ${{ !github.event.repository.private }}
+        uses: hacs/action@main
         with:
           category: integration
-          # The brands check asks the home-assistant/brands repository for this
-          # domain. This integration ships its own brand/ directory instead, which
-          # is what HACS documents for a custom repository, so the check is not
-          # applicable until and unless the domain is submitted to brands.
-          ignore: brands
+
+      - name: Pending while private
+        if: ${{ github.event.repository.private }}
+        run: |
+          echo "::notice title=HACS validation pending::Skipped because this \
+          repository is private. HACS supports public repositories only. This job \
+          runs for real on the first push after the repository is made public."
