@@ -91,7 +91,13 @@ Unlike `samples` (rejected per item), a malformed bucket **rejects the entire
 request with 400**. Nothing is applied: no statistics, no snapshot, no Last Sync,
 no entity update. That is what makes "validate-all-then-apply" meaningful.
 
+A bucket object is closed: it carries the keys listed for its family and nothing
+else. A v3 bucket carrying the v4 `metric` key is rejected for the same reason a
+v3 envelope carrying v4 bucket kinds is — the sender expects storage this version
+does not provide.
+
 Reason codes: `bad_buckets`, `bad_bucket`, `bad_bucket_missing_field`,
+`bad_bucket_unknown_field`,
 `bad_bucket_bad_value`, `bad_bucket_bad_timestamp`, `bad_bucket_future_timestamp`,
 `bad_bucket_time_zone`, `bad_bucket_count`, `bucket_start_not_hour_aligned`,
 `bucket_range_inconsistent`, `duplicate_hourly_bucket`, `duplicate_daily_bucket`,

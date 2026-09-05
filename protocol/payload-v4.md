@@ -124,6 +124,23 @@ Three arrays on the wire; four semantic families, because `daily` splits by what
 the registry says the metric is. Which one applies is decided by the registry,
 never inferred from which fields happen to be present.
 
+**A bucket object is closed.** It carries the keys listed for its family and
+nothing else; anything further is rejected, whole request, no partial apply:
+
+| | rejected as |
+|---|---|
+| a field the registry knows but does not permit for this metric — `min` on `resting_heart_rate` | `bad_bucket_unexpected_field` |
+| a key nothing here reads at all — a typo, or a field from a newer client | `bad_bucket_unknown_field`, and `bad_nightly_unknown_field` for a nightly record |
+
+Two codes rather than one because a client author needs to tell "this receiver
+stores that, but not for this metric" from "nothing here reads that".
+
+This is not a forward-compatibility hatch that was closed; it is the same rule
+the metric registry and the bucket-kind check already apply, finally applied to
+the field level too. A client with something new to say says it in a new
+protocol version — which an older receiver refuses outright, before any data
+moves, instead of answering 200 and storing part of it.
+
 ### `buckets.hourly` — hourly discrete
 
 ```json
@@ -427,6 +444,9 @@ Unchanged from v3, and now covering the new families.
 Aggregate history is **all-or-nothing**. One malformed bucket fails the whole
 request; nothing is applied. Unlike raw samples, a bucket is never individually
 rejected into a `rejected` list.
+
+Reason codes added in this cycle: `bad_bucket_unknown_field`,
+`bad_nightly_unknown_field` (§4).
 
 Ordering is load-bearing: the durable window is imported **before** anything
 touches the current values. If the import is refused, the request fails, no

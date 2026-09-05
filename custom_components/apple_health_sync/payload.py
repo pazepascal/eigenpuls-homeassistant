@@ -910,6 +910,42 @@ def _check_fields(raw: dict[str, Any], spec: registry.MetricSpec) -> None:
         raise PayloadError("bad_bucket_unexpected_field")
 
 
+# Everything a bucket object may carry. The aggregate names are listed in full
+# rather than taken from the metric's own spec, so that a field this registry
+# knows but does not permit for this metric keeps its specific reason code
+# (``bad_bucket_unexpected_field``) instead of being reported as unknown.
+_AGGREGATE_FIELDS = frozenset({"mean", "min", "max", "total", "count"})
+_HOURLY_KEYS = frozenset({"start"}) | _AGGREGATE_FIELDS
+_DAILY_KEYS = frozenset({"date", "time_zone"}) | _AGGREGATE_FIELDS
+_NIGHTLY_KEYS = frozenset({
+    "date", "time_zone", "total_sleep_min", "sleep_start", "wake_time",
+    "rem_min", "core_min", "deep_min", "awake_min",
+})
+
+
+def _bucket_keys(base: frozenset[str], version: int) -> frozenset[str]:
+    """The legal keys of a bucket, which gained ``metric`` in v4."""
+    return (base | {"metric"}) if version >= 4 else base
+
+
+def _reject_unknown_keys(
+    raw: dict[str, Any], allowed: frozenset[str], reason: str
+) -> None:
+    """Refuse a bucket carrying a key this receiver does not implement.
+
+    Same reasoning as the metric registry and the bucket-kind check one level
+    up: a key nobody here reads is a measurement the sender believes it stored.
+    Answering 200 and dropping it is the one failure this protocol was versioned
+    to prevent, and a typo in a field name is indistinguishable from it.
+
+    Deliberately not a forward-compatibility hatch. A client with something new
+    to say says it in a new protocol version, which an older receiver refuses
+    outright - visibly, before any data moves - rather than half-storing.
+    """
+    if set(raw) - allowed:
+        raise PayloadError(reason)
+
+
 def _parse_count(raw: Any) -> int | None:
     count = raw.get("count")
     if count is not None and (
@@ -920,7 +956,7 @@ def _parse_count(raw: Any) -> int | None:
 
 
 def _parse_hour_bucket(
-    raw: Any, *, now: datetime, metric: str = "heart_rate"
+    raw: Any, *, now: datetime, metric: str = "heart_rate", version: int = 4
 ) -> MetricHourBucket:
     if not isinstance(raw, dict):
         raise PayloadError("bad_bucket")
@@ -930,6 +966,11 @@ def _parse_hour_bucket(
     if spec.kind is not BucketKind.HOURLY_DISCRETE:
         raise PayloadError("wrong_bucket_kind")
     _check_fields(raw, spec)
+    # ``metric`` is a v4 key. In a v3 bucket it would be read by nobody, which is
+    # the v3-envelope-carrying-v4-keys case the compatibility table rejects.
+    _reject_unknown_keys(
+        raw, _bucket_keys(_HOURLY_KEYS, version), "bad_bucket_unknown_field"
+    )
 
     try:
         start = _parse_timestamp(raw.get("start"), now=now)
@@ -981,7 +1022,7 @@ def _parse_local_day(raw: Any, *, now: datetime) -> tuple[date, str]:
 
 
 def _parse_day_bucket(
-    raw: Any, *, now: datetime, metric: str = "steps"
+    raw: Any, *, now: datetime, metric: str = "steps", version: int = 4
 ) -> MetricDayBucket:
     if not isinstance(raw, dict):
         raise PayloadError("bad_bucket")
@@ -991,6 +1032,9 @@ def _parse_day_bucket(
     if spec.kind not in (BucketKind.DAILY_CUMULATIVE, BucketKind.DAILY_DISCRETE):
         raise PayloadError("wrong_bucket_kind")
     _check_fields(raw, spec)
+    _reject_unknown_keys(
+        raw, _bucket_keys(_DAILY_KEYS, version), "bad_bucket_unknown_field"
+    )
     day, time_zone = _parse_local_day(raw, now=now)
 
     if spec.kind is BucketKind.DAILY_CUMULATIVE:
@@ -1087,6 +1131,10 @@ def _parse_nightly(raw: Any, *, now: datetime) -> NightlySleep:
     if "nap_total_min" in raw or "nap_count" in raw:
         raise PayloadError("nightly_nap_fields_moved")
 
+    # Checked last so the moved nap fields keep their own reason code: they are
+    # unknown here too, but "they moved" is the answer their sender needs.
+    _reject_unknown_keys(raw, _NIGHTLY_KEYS, "bad_nightly_unknown_field")
+
     return NightlySleep(
         day=day, time_zone=time_zone, total_sleep_min=total,
         sleep_start=sleep_start, wake_time=wake_time, **stages,
@@ -1132,8 +1180,12 @@ def _parse_history(raw: Any, *, now: datetime, version: int) -> AggregateHistory
             raise PayloadError("too_many_hourly_buckets")
         if len(daily) > MAX_DAILY_BUCKETS:
             raise PayloadError("too_many_daily_buckets")
-        history.hourly = [_parse_hour_bucket(item, now=now) for item in hourly]
-        history.daily = [_parse_day_bucket(item, now=now) for item in daily]
+        history.hourly = [
+            _parse_hour_bucket(item, now=now, version=version) for item in hourly
+        ]
+        history.daily = [
+            _parse_day_bucket(item, now=now, version=version) for item in daily
+        ]
     else:
         hourly = raw.get("hourly") or []
         daily = raw.get("daily") or []
