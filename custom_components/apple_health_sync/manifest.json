@@ -1,6 +1,9 @@
 {
   "domain": "apple_health_sync",
   "name": "Eigenpuls",
+  "after_dependencies": [
+    "cloud"
+  ],
   "codeowners": [
     "@pazepascal"
   ],

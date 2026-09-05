@@ -14,6 +14,10 @@ DOMAIN: Final = "apple_health_sync"
 # Config entry keys
 CONF_WEBHOOK_ID: Final = "webhook_id"
 CONF_TOKEN: Final = "token"
+# Present only on entries paired through Home Assistant Cloud. Absent on every
+# entry created before pairing existed, and on any local-only setup - so every
+# read of it must tolerate its absence.
+CONF_CLOUDHOOK_URL: Final = "cloudhook_url"
 
 # Device identity. The device name determines the generated entity_id
 # (HA composes it as slugify("<device name> <entity name>")), so "Apple Health"

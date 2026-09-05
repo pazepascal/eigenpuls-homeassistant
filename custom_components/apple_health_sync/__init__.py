@@ -6,6 +6,7 @@ there is deliberately no DataUpdateCoordinator.
 
 from __future__ import annotations
 
+from contextlib import suppress
 from dataclasses import dataclass, field
 from typing import Final
 
@@ -14,7 +15,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import webhook as webhook_receiver
-from .const import CONF_TOKEN, CONF_WEBHOOK_ID
+from .const import CONF_CLOUDHOOK_URL, CONF_TOKEN, CONF_WEBHOOK_ID
 from .state import HealthState
 
 # Defined here rather than in const.py, which must stay free of Home
@@ -59,3 +60,23 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Delete the cloudhook this entry created, if it created one.
+
+    Only entries paired through Home Assistant Cloud carry the key, so this is a
+    no-op for a local setup and for every entry created before pairing existed.
+    Left behind, the cloudhook would be an orphaned public endpoint on the
+    person's account for a webhook that no longer exists.
+    """
+    if CONF_CLOUDHOOK_URL not in entry.data:
+        return
+
+    # Imported lazily for the same reason as in config_flow: `cloud` is
+    # optional, and it is only reachable at all if an entry was paired through
+    # it in the first place.
+    from homeassistant.components import cloud
+
+    with suppress(cloud.CloudNotAvailable, KeyError):
+        await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])

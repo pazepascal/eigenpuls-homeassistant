@@ -2,15 +2,44 @@
   "config": {
     "step": {
       "user": {
-        "title": "Eigenpuls",
-        "description": "This creates a webhook URL and an access token for the Eigenpuls iOS app. The token is shown once, on the next screen. Store it in the app straight away — it cannot be displayed again."
+        "title": "Connect Eigenpuls",
+        "description": "Eigenpuls carries health data from your iPhone to this Home Assistant. The next screen shows a code to scan with the app.",
+        "submit": "Continue"
+      },
+      "pair": {
+        "title": "Scan this with Eigenpuls",
+        "description": "Open Eigenpuls on your iPhone and scan the code.\n\nCan't scan? Copy this instead:\n\n```\n{code}\n```\n\n**This code contains the access data for this connection. Don't share it, and don't post it in a screenshot.**\n\nIt is shown only now. If you lose it, use *Reconfigure* to create a new one.\n\nThis connection also works when you are away from home.",
+        "submit": "I've scanned it"
+      },
+      "reconfigure": {
+        "title": "Connect again",
+        "description": "This creates new access data for the Eigenpuls app. The old code stops working immediately. Your existing data and history are not affected.",
+        "submit": "Continue"
+      },
+      "reconfigure_pair": {
+        "title": "Scan this with Eigenpuls",
+        "description": "Open Eigenpuls on your iPhone and scan the new code.\n\nCan't scan? Copy this instead:\n\n```\n{code}\n```\n\n**The previous code stops working as soon as you finish here.**\n\nThis connection also works when you are away from home.",
+        "submit": "I've scanned it"
+      },
+      "pair_local": {
+        "title": "Scan this with Eigenpuls",
+        "description": "Open Eigenpuls on your iPhone and scan the code.\n\nCan't scan? Copy this instead:\n\n```\n{code}\n```\n\n**This code contains the access data for this connection. Don't share it, and don't post it in a screenshot.**\n\nIt is shown only now. If you lose it, use *Reconfigure* to create a new one.\n\nThis connection works only while your iPhone is on your home network.",
+        "submit": "I've scanned it"
+      },
+      "reconfigure_pair_local": {
+        "title": "Scan this with Eigenpuls",
+        "description": "Open Eigenpuls on your iPhone and scan the new code.\n\nCan't scan? Copy this instead:\n\n```\n{code}\n```\n\n**The previous code stops working as soon as you finish here.**\n\nThis connection works only while your iPhone is on your home network.",
+        "submit": "I've scanned it"
       }
     },
-    "abort": {
-      "already_configured": "Eigenpuls is already set up."
+    "error": {
+      "no_usable_url": "Home Assistant has no address the iPhone can reach. Set an internal or external address under Settings › System › Network, then try again.",
+      "unusable_url": "The address Home Assistant reports cannot be used for a secure connection. Use HTTPS, or an address on your home network.",
+      "missing_token": "Something went wrong creating the access data. Please try again."
     },
-    "create_entry": {
-      "default": "Enter these two values in the Eigenpuls app under Connection:\n\nURL: {url}\n\nToken: {token}\n\nThe token is not shown again. If you lose it, delete this entry and add the integration again."
+    "abort": {
+      "already_configured": "Eigenpuls is already set up.",
+      "reconfigure_successful": "Eigenpuls is connected again. Scan the new code if you have not already."
     }
   },
   "entity": {

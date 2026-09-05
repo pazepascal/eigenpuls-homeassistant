@@ -26,6 +26,10 @@ it has stored.
    stored, and a typo in a field name is indistinguishable from one. Same
    reasoning as rule 2, one level down.
 
+[Pairing](pairing-v1.md) is specified separately and versioned separately: it
+carries one URL and one token, changes when *setup* changes, and has no business
+forcing a wire version bump when it does.
+
 `custom_components/apple_health_sync/registry.py` is the registry, and
 `tests/test_registry_freeze.py` stops an existing entry being renamed or
 reinterpreted — Home Assistant long-term statistics cannot be rolled back, so a

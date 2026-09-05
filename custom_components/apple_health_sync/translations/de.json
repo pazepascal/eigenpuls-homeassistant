@@ -2,15 +2,44 @@
   "config": {
     "step": {
       "user": {
-        "title": "Eigenpuls",
-        "description": "Hierbei werden eine Webhook-URL und ein Zugriffstoken für die Eigenpuls-App erzeugt. Das Token wird nur einmal auf dem nächsten Bildschirm angezeigt. Trage es sofort in der App ein — es kann nicht erneut angezeigt werden."
+        "title": "Eigenpuls verbinden",
+        "description": "Eigenpuls übertragt Gesundheitsdaten von deinem iPhone an dieses Home Assistant. Auf dem nächsten Bildschirm siehst du einen Code zum Scannen.",
+        "submit": "Weiter"
+      },
+      "pair": {
+        "title": "Mit Eigenpuls scannen",
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den Code.\n\nScannen nicht möglich? Dann kopiere stattdessen dies:\n\n```\n{code}\n```\n\n**Dieser Code enthält die Zugangsdaten für diese Verbindung. Gib ihn nicht weiter und poste ihn nicht als Screenshot.**\n\nEr wird nur jetzt angezeigt. Falls er verloren geht, erstelle über *Neu konfigurieren* einen neuen.\n\nDiese Verbindung funktioniert auch unterwegs.",
+        "submit": "Gescannt"
+      },
+      "reconfigure": {
+        "title": "Neu verbinden",
+        "description": "Damit werden neue Zugangsdaten für die Eigenpuls-App erstellt. Der alte Code funktioniert sofort nicht mehr. Deine vorhandenen Daten und der Verlauf bleiben unverändert.",
+        "submit": "Weiter"
+      },
+      "reconfigure_pair": {
+        "title": "Mit Eigenpuls scannen",
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den neuen Code.\n\nScannen nicht möglich? Dann kopiere stattdessen dies:\n\n```\n{code}\n```\n\n**Der bisherige Code funktioniert nicht mehr, sobald du hier fertig bist.**\n\nDiese Verbindung funktioniert auch unterwegs.",
+        "submit": "Gescannt"
+      },
+      "pair_local": {
+        "title": "Mit Eigenpuls scannen",
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den Code.\n\nScannen nicht möglich? Dann kopiere stattdessen dies:\n\n```\n{code}\n```\n\n**Dieser Code enthält die Zugangsdaten für diese Verbindung. Gib ihn nicht weiter und poste ihn nicht als Screenshot.**\n\nEr wird nur jetzt angezeigt. Falls er verloren geht, erstelle über *Neu konfigurieren* einen neuen.\n\nDiese Verbindung funktioniert nur, solange dein iPhone in deinem Heimnetz ist.",
+        "submit": "Gescannt"
+      },
+      "reconfigure_pair_local": {
+        "title": "Mit Eigenpuls scannen",
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den neuen Code.\n\nScannen nicht möglich? Dann kopiere stattdessen dies:\n\n```\n{code}\n```\n\n**Der bisherige Code funktioniert nicht mehr, sobald du hier fertig bist.**\n\nDiese Verbindung funktioniert nur, solange dein iPhone in deinem Heimnetz ist.",
+        "submit": "Gescannt"
       }
     },
-    "abort": {
-      "already_configured": "Eigenpuls ist bereits eingerichtet."
+    "error": {
+      "no_usable_url": "Home Assistant hat keine Adresse, die das iPhone erreichen kann. Trage unter Einstellungen › System › Netzwerk eine interne oder externe Adresse ein und versuche es erneut.",
+      "unusable_url": "Die von Home Assistant gemeldete Adresse eignet sich nicht für eine sichere Verbindung. Verwende HTTPS oder eine Adresse in deinem Heimnetz.",
+      "missing_token": "Beim Erstellen der Zugangsdaten ist etwas schiefgelaufen. Bitte versuche es erneut."
     },
-    "create_entry": {
-      "default": "Trage diese beiden Werte in der Eigenpuls-App unter Verbindung ein:\n\nURL: {url}\n\nToken: {token}\n\nDas Token wird nicht erneut angezeigt. Wenn es verloren geht, lösche diesen Eintrag und füge die Integration erneut hinzu."
+    "abort": {
+      "already_configured": "Eigenpuls ist bereits eingerichtet.",
+      "reconfigure_successful": "Eigenpuls ist neu verbunden. Scanne den neuen Code, falls noch nicht geschehen."
     }
   },
   "entity": {
