@@ -21,6 +21,8 @@ from custom_components.apple_health_sync.payload import (
     MeasurementSnapshot,
     NightlySleep,
     SleepTrend,
+    WorkoutCategories,
+    WorkoutCategoryTotals,
 )
 from custom_components.apple_health_sync.registry import METRICS
 from custom_components.apple_health_sync.sensor import (
@@ -83,6 +85,15 @@ def populated_state() -> HealthState:
     state.activity_day = date(2026, 6, 10)
     state.activity_time_zone = TZ
 
+    # Training by category: one composite, only the categories actually trained.
+    state.workout_categories = WorkoutCategories(
+        window_days=90,
+        categories={
+            "walking": WorkoutCategoryTotals(
+                count=18, duration_min=540.0, energy_kcal=1100.0),
+            "running": WorkoutCategoryTotals(count=6, duration_min=210.0),
+        },
+    )
     state.last_workout = LastWorkout(
         uuid="F1A2", activity="strength_training",
         start=datetime(2026, 6, 10, 17, 0, tzinfo=UTC),
@@ -121,7 +132,7 @@ def build(state: HealthState) -> list[AppleHealthSensor]:
 
 def test_every_sensor_builds_and_reports_a_value():
     sensors = build(populated_state())
-    assert len(sensors) == 42
+    assert len(sensors) == 43
 
     for sensor in sensors:
         # Both properties are exercised: a typo in either lambda raises here.

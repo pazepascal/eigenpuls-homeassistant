@@ -684,6 +684,76 @@ classification, no `PERCENT_METRICS`-style plausibility check, and no device or
 CGM integration. A value far outside any normal range is still the value Apple
 Health holds and is stored exactly as sent.
 
+## 9c. Phase 4C: training by category
+
+A snapshot composite under `workout_categories`, carrying the training
+breakdown for the rolling 90-day workout window.
+
+```json
+"workout_categories": {
+  "window_days": 90,
+  "categories": {
+    "walking":  {"count": 42, "duration_min": 1260.0, "energy_kcal": 3100.0},
+    "running":  {"count": 8,  "duration_min": 320.0}
+  }
+}
+```
+
+### Why a composite and not a statistic per category
+
+Measured before it was designed. Twelve categories times count, duration and
+energy is 36 daily metrics. The client divides the 400-bucket ceiling by the
+daily series count to get its per-metric allowance, so 22 + 36 = 58 series
+gives an allowance of 6 — the 14-day recovery window becomes a **6-day** one.
+Count and duration alone still only reach 8 days.
+
+The ceiling is not what fails: 348 buckets still fit. What fails is the reason
+the 14-day window exists, which is a phone that was offline for a fortnight
+catching up. That would be traded away silently, for a breakdown that a home
+dashboard reads as a current picture rather than as history.
+
+So the durable training history stays exactly what it was —
+`workout_count`, `workout_duration` and `workout_energy`, unchanged — and this
+answers the different question of *what* the training was, for the whole window
+at once, at zero bucket cost and with no new statistic ids.
+
+### No capability gate, deliberately
+
+Unlike `snapshot.activity`, this needs none, and adding one would have been a
+regression rather than a safeguard.
+
+An unknown *bucket metric* is fatal to a delivery; an unknown *snapshot key* is
+ignored (§9). This key therefore rides along harmlessly to a receiver that has
+never heard of it. Gating it as a required feature of the workouts source would
+have meant the whole source — buckets, `last_workout`, everything — being
+withheld from a v1.4.0 receiver that handles all of it perfectly well.
+
+### Rules
+
+- Only categories with at least one workout in the window appear. A category
+  absent from `categories` was **not trained**; it is never a zero.
+- `energy_kcal` is omitted when none of that category's workouts recorded
+  energy — the same rule the daily `workout_energy` series follows.
+- The vocabulary is closed to `WORKOUT_ACTIVITIES` (§9). An unrecognised name is
+  rejected rather than folded into `other`: the client already does that
+  mapping, so a name arriving here that the receiver does not know means the two
+  halves disagree about the taxonomy, and guessing would hide that.
+- `count` is an integer of at least 1; durations and energies are non-negative.
+- The receiver **replaces** the whole object rather than merging it. This is a
+  complete recomputation of a fixed window each sync, so a category that leaves
+  the window has to disappear. An object that is absent entirely still leaves
+  the previous one untouched.
+
+### What Home Assistant shows
+
+One entity, never one per activity type. Its state is the most-trained category
+of the window, decided by minutes rather than by count — four short walks are
+not more training than one long ride — with ties broken on the name so the value
+does not flicker between syncs. The full breakdown rides in its attributes.
+
+No routes, no locations, no per-workout heart-rate curves. §9's exclusions are
+unchanged.
+
 ## 10. Limits
 
 | limit | value |
@@ -699,13 +769,17 @@ The v4 daily ceiling is higher because v4 carries a bucket per metric per day:
 seven daily metrics across the widest 14-day recovery window is 98 buckets, which
 the v3 ceiling of 40 would have refused.
 
-As of Phase 4B there are **22 daily metrics**, so a full 14-day window is 308 of
-the 400 available. The figure that runs out first is not this one but the
-client's per-metric allowance, which divides the ceiling by the daily metric
-count: at 28 daily metrics a 14-day window no longer fits, and the window
-silently shortens instead. Any design that *multiplies* metrics — a
-per-category workout aggregate, say — has to be measured against that number
-before it is built, not after.
+As of Phase 4B there are **22 daily series**, naps included, so a full 14-day
+window is 308 of the 400 available.
+
+The figure that runs out first is not this ceiling but the client's per-metric
+allowance, which divides the ceiling by the daily series count. At 29 series a
+14-day window no longer fits and the window silently shortens instead — the
+ceiling is never breached, the history just gets shorter without saying so. Any
+design that *multiplies* series has to be measured against that before it is
+built: a statistic per workout category would have been 58 series and a
+**6-day** window, which is why Phase 4C carries the breakdown as a snapshot
+composite instead (§9c).
 
 The hourly ceilings are two-tier and both are enforced by **rejecting** an
 oversized request, never by trimming. Per metric first, so one series can never

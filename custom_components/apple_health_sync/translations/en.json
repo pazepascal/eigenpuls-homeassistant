@@ -107,6 +107,23 @@
       },
       "blood_glucose": {
         "name": "Blood Glucose"
+      },
+      "workout_categories": {
+        "name": "Workout Categories",
+        "state": {
+          "walking": "Walking",
+          "running": "Running",
+          "cycling": "Cycling",
+          "strength_training": "Strength Training",
+          "functional_strength": "Functional Strength",
+          "hiit": "HIIT",
+          "hiking": "Hiking",
+          "swimming": "Swimming",
+          "rowing": "Rowing",
+          "elliptical": "Elliptical",
+          "yoga": "Yoga",
+          "other": "Other"
+        }
       }
     }
   }

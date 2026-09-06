@@ -199,6 +199,23 @@
       },
       "blood_glucose": {
         "name": "Blutzucker"
+      },
+      "workout_categories": {
+        "name": "Trainingsarten",
+        "state": {
+          "walking": "Gehen",
+          "running": "Laufen",
+          "cycling": "Radfahren",
+          "strength_training": "Krafttraining",
+          "functional_strength": "Funktionelles Krafttraining",
+          "hiit": "HIIT",
+          "hiking": "Wandern",
+          "swimming": "Schwimmen",
+          "rowing": "Rudern",
+          "elliptical": "Crosstrainer",
+          "yoga": "Yoga",
+          "other": "Sonstiges"
+        }
       }
     }
   }

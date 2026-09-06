@@ -23,6 +23,7 @@ from .payload import (
     ParsedPayload,
     SleepTrend,
     Snapshot,
+    WorkoutCategories,
 )
 
 
@@ -64,6 +65,12 @@ class HealthState:
     activity_day: date | None = None
     activity_time_zone: str | None = None
     last_workout: LastWorkout | None = None
+    #: Training by category over the rolling window. Replaced wholesale rather
+    #: than merged, unlike the activity values above, and the difference is the
+    #: point: this is a complete recomputation over a fixed window every sync, so
+    #: a category that drops out of the window has to disappear. Merging would
+    #: leave a sport nobody has done since spring on the dashboard for ever.
+    workout_categories: WorkoutCategories | None = None
     #: Measurement-weighted rolling averages, derived by Home Assistant from its
     #: own durable history rather than sent by the phone. Keyed by period in days.
     blood_pressure_trends: dict[int, object] = field(default_factory=dict)
@@ -110,6 +117,10 @@ class HealthState:
             self.blood_pressure = snapshot.blood_pressure
         if snapshot.last_workout is not None:
             self.last_workout = snapshot.last_workout
+        # Absent still means untouched: an older client, or the workouts source
+        # switched off, must not clear what is displayed.
+        if snapshot.workout_categories is not None:
+            self.workout_categories = snapshot.workout_categories
 
         if (activity := snapshot.activity) is not None:
             self.activity_move_mode = activity.move_mode

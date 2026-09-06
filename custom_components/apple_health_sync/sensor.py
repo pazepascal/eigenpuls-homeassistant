@@ -28,7 +28,7 @@ from homeassistant.util import dt as dt_util
 
 from . import AppleHealthSyncConfigEntry, registry
 from .entity import AppleHealthSyncEntity
-from .payload import BloodPressureSnapshot, LastWorkout
+from .payload import BloodPressureSnapshot, LastWorkout, WorkoutCategories
 from .registry import SLEEP_OFFSET_ANCHOR_HOUR
 from .state import HealthState
 
@@ -223,6 +223,24 @@ def _restore_move_mode(state: HealthState, last: State) -> None:
     """Restore the move mode, but only a value that is still in the vocabulary."""
     if last.state in registry.ACTIVITY_MOVE_MODES:
         state.activity_move_mode = last.state
+
+
+def _restore_workout_categories(state: HealthState, last: State) -> None:
+    """Bring back the most-trained category, and only if it is still a category.
+
+    The breakdown itself is not restored. It is a derived view of a 90-day
+    window that the next sync recomputes in full, and a restored copy would be
+    a stale number wearing a fresh timestamp.
+    """
+    if state.workout_categories is not None:
+        return
+    if last.state not in registry.WORKOUT_ACTIVITIES:
+        return
+    window = last.attributes.get("window_days")
+    state.workout_categories = WorkoutCategories(
+        window_days=int(window) if isinstance(window, int) else 0,
+        categories={},
+    )
 
 
 def _restore_workout(state: HealthState, last: State) -> None:
@@ -653,6 +671,43 @@ SENSORS: tuple[AppleHealthSensorEntityDescription, ...] = (
             "unit": BLOOD_PRESSURE_UNIT,
         },
         restore_fn=_restore_blood_pressure,
+    ),
+    # Training by category over the rolling window.
+    #
+    # One entity rather than twelve, and no statistics at all. The durable
+    # training history is the existing workout_count / workout_duration /
+    # workout_energy series; this answers the different question of *what* the
+    # training was, and it answers it for the whole window at once.
+    #
+    # Twelve categories times three aggregates would have been 36 daily metrics.
+    # The client divides its 400-bucket ceiling by the daily metric count, so
+    # that reduces a 14-day recovery window to 7 days and still overflows at 406
+    # buckets - measured before this shape was chosen, not after.
+    AppleHealthSensorEntityDescription(
+        key="workout_categories",
+        translation_key="workout_categories",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(registry.WORKOUT_ACTIVITIES),
+        value_fn=lambda state: (
+            state.workout_categories.most_trained if state.workout_categories else None
+        ),
+        attrs_fn=lambda state: {
+            "window_days": (
+                state.workout_categories.window_days
+                if state.workout_categories else None
+            ),
+            # Only the categories actually trained. A sport missing from here was
+            # not done in the window; it is never a zero.
+            "categories": {
+                name: {
+                    "count": totals.count,
+                    "duration_min": totals.duration_min,
+                    "energy_kcal": totals.energy_kcal,
+                }
+                for name, totals in state.workout_categories.categories.items()
+            } if state.workout_categories else {},
+        },
+        restore_fn=_restore_workout_categories,
     ),
     # Rolling measurement-weighted averages, derived by Home Assistant from its
     # own durable history. Every real measurement counts once - neither hours nor

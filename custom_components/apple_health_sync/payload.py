@@ -269,6 +269,57 @@ class LastWorkout:
 
 
 @dataclass(slots=True)
+class WorkoutCategoryTotals:
+    """One workout category's totals over the rolling window."""
+
+    count: int
+    duration_min: float
+    #: ``None`` when none of that category's workouts recorded energy, which is
+    #: not the same as a category that burned nothing - the same rule the daily
+    #: ``workout_energy`` series already follows.
+    energy_kcal: float | None = None
+
+
+@dataclass(slots=True)
+class WorkoutCategories:
+    """Training broken down by category over a rolling window (v4).
+
+    A composite snapshot rather than a statistic per category, and that is a
+    measured decision rather than a stylistic one. Twelve categories times three
+    aggregates would be 36 daily metrics; the client divides its 400-bucket
+    ceiling by the daily metric count, so 56 daily metrics reduce a 14-day
+    window to 7 days and still overflow at 406 buckets. The breakdown is worth
+    having and is not worth halving the recovery window for.
+
+    So there is no long-term history per category. The existing
+    ``workout_count`` / ``workout_duration`` / ``workout_energy`` series keep
+    the durable totals, and this answers the different question of *what* the
+    training was.
+
+    Only categories with at least one workout in the window appear. A category
+    absent here was not trained; it is never a zero.
+    """
+
+    window_days: int
+    categories: dict[str, WorkoutCategoryTotals]
+
+    @property
+    def most_trained(self) -> str | None:
+        """The category with the most minutes, or ``None`` for an empty window.
+
+        By duration rather than by count, because four ten-minute walks are not
+        more training than one long ride. Ties break on the category name so the
+        answer is stable across syncs rather than depending on dict order.
+        """
+        if not self.categories:
+            return None
+        return min(
+            self.categories,
+            key=lambda name: (-self.categories[name].duration_min, name),
+        )
+
+
+@dataclass(slots=True)
 class SleepTrend:
     """The rolling seven-night trend, computed on the device (v4).
 
@@ -314,6 +365,7 @@ class Snapshot:
     sleep_7d: SleepTrend | None = None
     blood_pressure: BloodPressureSnapshot | None = None
     last_workout: LastWorkout | None = None
+    workout_categories: WorkoutCategories | None = None
     activity: ActivitySnapshot | None = None
 
 
@@ -934,6 +986,62 @@ def _parse_last_workout(raw: Any, *, now: datetime) -> LastWorkout:
     )
 
 
+_WORKOUT_CATEGORY_FIELDS: Final = frozenset({"count", "duration_min", "energy_kcal"})
+
+
+def _parse_workout_categories(raw: Any) -> WorkoutCategories:
+    """Parse the per-category training breakdown.
+
+    Closed on both axes. An activity outside ``WORKOUT_ACTIVITIES`` is rejected
+    rather than folded into ``other``: the client already does that mapping, so
+    an unrecognised name here means the two halves disagree about the taxonomy,
+    and guessing would hide that.
+    """
+    if not isinstance(raw, dict):
+        raise PayloadError("bad_workout_categories")
+
+    unknown = set(raw) - {"window_days", "categories"}
+    if unknown:
+        raise PayloadError("bad_workout_categories_unknown_field")
+
+    window = raw.get("window_days")
+    if not isinstance(window, int) or isinstance(window, bool) or window <= 0:
+        raise PayloadError("bad_workout_categories_window")
+
+    entries = raw.get("categories")
+    if not isinstance(entries, dict):
+        raise PayloadError("bad_workout_categories")
+
+    totals: dict[str, WorkoutCategoryTotals] = {}
+    for name, entry in entries.items():
+        if name not in registry.WORKOUT_ACTIVITIES:
+            raise PayloadError("bad_workout_categories_unknown_activity")
+        if not isinstance(entry, dict):
+            raise PayloadError("bad_workout_categories")
+        if set(entry) - _WORKOUT_CATEGORY_FIELDS:
+            raise PayloadError("bad_workout_categories_unknown_field")
+
+        count = entry.get("count")
+        if not isinstance(count, int) or isinstance(count, bool) or count < 1:
+            raise PayloadError("bad_workout_categories_count")
+        try:
+            duration = _parse_value(entry.get("duration_min"))
+            energy = (
+                None if entry.get("energy_kcal") is None
+                else _parse_value(entry.get("energy_kcal"))
+            )
+        except ValueError as err:
+            raise PayloadError(f"bad_workout_categories_{err}") from err
+        if duration < 0 or (energy is not None and energy < 0):
+            raise PayloadError("bad_workout_categories_negative")
+
+        totals[name] = WorkoutCategoryTotals(
+            count=count, duration_min=duration, energy_kcal=energy
+        )
+
+    return WorkoutCategories(window_days=window, categories=totals)
+
+
 def _parse_snapshot(raw: Any, *, now: datetime, version: int) -> Snapshot:
     """A snapshot member that is absent or null leaves that sensor unchanged."""
     if not isinstance(raw, dict):
@@ -978,6 +1086,8 @@ def _parse_snapshot(raw: Any, *, now: datetime, version: int) -> Snapshot:
         snapshot.last_workout = _parse_last_workout(workout, now=now)
     if (activity := raw.get("activity")) is not None:
         snapshot.activity = _parse_activity(activity, now=now)
+    if (categories := raw.get("workout_categories")) is not None:
+        snapshot.workout_categories = _parse_workout_categories(categories)
     return snapshot
 
 

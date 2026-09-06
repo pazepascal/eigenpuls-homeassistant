@@ -242,10 +242,31 @@ async def test_without_a_workout_the_entity_is_unknown(entry, hass):
     assert hass.states.get("sensor.apple_health_last_workout").state == "unknown"
 
 
-async def test_only_one_workout_entity_exists(entry, hass):
-    """One entity, not one per activity type."""
-    workout_entities = [
+async def test_no_entity_is_named_after_an_individual_activity(entry, hass):
+    """Two composite workout entities, and never one per activity type.
+
+    The rule this protects is 3B.2's: Home Assistant keeps the latest session in
+    detail and durable daily totals, not a database of workouts. Phase 4C added
+    the category breakdown as a *second composite* - one entity carrying all
+    twelve - for the same reason, so the count changed and the rule did not.
+
+    Both halves are asserted, because only the second one is the rule: a future
+    "sensor.apple_health_workout_running" would pass a bare count check and be
+    exactly what this file exists to prevent.
+    """
+    from custom_components.apple_health_sync import registry
+
+    workout_entities = sorted(
         state.entity_id for state in hass.states.async_all("sensor")
         if "workout" in state.entity_id or "training" in state.entity_id
+    )
+    assert workout_entities == [
+        "sensor.apple_health_last_workout",
+        "sensor.apple_health_workout_categories",
     ]
-    assert workout_entities == ["sensor.apple_health_last_workout"]
+
+    for activity in registry.WORKOUT_ACTIVITIES:
+        assert not any(
+            state.entity_id.endswith(f"_{activity}")
+            for state in hass.states.async_all("sensor")
+        ), f"an entity was created for the {activity} category"
