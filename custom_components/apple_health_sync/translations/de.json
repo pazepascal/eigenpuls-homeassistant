@@ -8,8 +8,8 @@
       },
       "pair": {
         "title": "Mit Eigenpuls scannen",
-        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den Code.\n\nTippe danach hier unten auf „Gescannt“ – die App verbindet sich dann von selbst.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Behandle diesen Verbindungscode wie ein Passwort.**\n\nDiese Verbindung funktioniert auch unterwegs.",
-        "submit": "Gescannt",
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den Code.\n\nTippe danach hier unten auf „Abschließen“ – die App verbindet sich dann von selbst.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Behandle diesen Verbindungscode wie ein Passwort.**\n\nDiese Verbindung funktioniert auch unterwegs.",
+        "submit": "Abschließen",
         "data": {
           "code": "Verbindungscode"
         }
@@ -21,24 +21,24 @@
       },
       "reconfigure_pair": {
         "title": "Mit Eigenpuls scannen",
-        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den neuen Code.\n\nTippe danach hier unten auf „Gescannt“ – die App verbindet sich dann von selbst. Der bisherige Code funktioniert ab diesem Moment nicht mehr.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Behandle diesen Verbindungscode wie ein Passwort.**\n\nDiese Verbindung funktioniert auch unterwegs.",
-        "submit": "Gescannt",
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den neuen Code.\n\nTippe danach hier unten auf „Abschließen“ – die App verbindet sich dann von selbst. Der bisherige Code funktioniert ab diesem Moment nicht mehr.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Behandle diesen Verbindungscode wie ein Passwort.**\n\nDiese Verbindung funktioniert auch unterwegs.",
+        "submit": "Abschließen",
         "data": {
           "code": "Verbindungscode"
         }
       },
       "pair_local": {
         "title": "Mit Eigenpuls scannen",
-        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den Code.\n\nTippe danach hier unten auf „Gescannt“ – die App verbindet sich dann von selbst.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Behandle diesen Verbindungscode wie ein Passwort.**\n\nDiese Verbindung funktioniert nur, solange dein iPhone in deinem Heimnetz ist.",
-        "submit": "Gescannt",
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den Code.\n\nTippe danach hier unten auf „Abschließen“ – die App verbindet sich dann von selbst.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Behandle diesen Verbindungscode wie ein Passwort.**\n\nDiese Verbindung funktioniert nur, solange dein iPhone in deinem Heimnetz ist.",
+        "submit": "Abschließen",
         "data": {
           "code": "Verbindungscode"
         }
       },
       "reconfigure_pair_local": {
         "title": "Mit Eigenpuls scannen",
-        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den neuen Code.\n\nTippe danach hier unten auf „Gescannt“ – die App verbindet sich dann von selbst. Der bisherige Code funktioniert ab diesem Moment nicht mehr.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Behandle diesen Verbindungscode wie ein Passwort.**\n\nDiese Verbindung funktioniert nur, solange dein iPhone in deinem Heimnetz ist.",
-        "submit": "Gescannt",
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den neuen Code.\n\nTippe danach hier unten auf „Abschließen“ – die App verbindet sich dann von selbst. Der bisherige Code funktioniert ab diesem Moment nicht mehr.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Behandle diesen Verbindungscode wie ein Passwort.**\n\nDiese Verbindung funktioniert nur, solange dein iPhone in deinem Heimnetz ist.",
+        "submit": "Abschließen",
         "data": {
           "code": "Verbindungscode"
         }
