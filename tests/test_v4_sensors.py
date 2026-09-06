@@ -49,12 +49,20 @@ def populated_state() -> HealthState:
         ("nap_total", 35.0), ("nap_count", 1.0),
         ("body_mass", 81.4), ("body_fat_percentage", 18.2),
         ("vo2_max", 42.7),
+        # Phase 4B. Both take the sparse body-metric shape, so both arrive as
+        # measurements rather than as daily totals.
+        ("bmi", 24.6), ("blood_glucose", 98.0),
+        # Apple derives one walking average per day, like resting heart rate.
+        ("walking_heart_rate_average", 96.0),
     ):
         state.measurements[metric] = MeasurementSnapshot(
             metric=metric, value=value, unit=METRICS[metric].unit,
             measured_at=datetime(2026, 6, 10, 6, tzinfo=UTC), source="Apple Watch",
         )
-    for metric, value in (("active_energy", 612.0), ("distance_walking_running", 7.4)):
+    for metric, value in (
+        ("active_energy", 612.0), ("distance_walking_running", 7.4),
+        ("flights_climbed", 12.0),
+    ):
         state.daily_totals[metric] = DailyTotalSnapshot(
             metric=metric, value=value, unit=METRICS[metric].unit,
             day=date(2026, 6, 10), time_zone=TZ,
@@ -113,7 +121,7 @@ def build(state: HealthState) -> list[AppleHealthSensor]:
 
 def test_every_sensor_builds_and_reports_a_value():
     sensors = build(populated_state())
-    assert len(sensors) == 38
+    assert len(sensors) == 42
 
     for sensor in sensors:
         # Both properties are exercised: a typo in either lambda raises here.
@@ -253,8 +261,9 @@ async def test_diagnostics_report_presence_but_never_values():
     blob = repr(report)
 
     assert report["state"]["metrics_present"] == [
-        "body_fat_percentage", "body_mass", "hrv_sdnn", "nap_count", "nap_total",
-        "oxygen_saturation", "respiratory_rate", "resting_heart_rate", "vo2_max",
+        "blood_glucose", "bmi", "body_fat_percentage", "body_mass", "hrv_sdnn",
+        "nap_count", "nap_total", "oxygen_saturation", "respiratory_rate",
+        "resting_heart_rate", "vo2_max", "walking_heart_rate_average",
     ]
     assert report["state"]["sleep"]["stages_present"] == [
         "awake_min", "core_min", "deep_min", "rem_min",
@@ -262,8 +271,10 @@ async def test_diagnostics_report_presence_but_never_values():
     assert report["state"]["sleep_trend_nights"] == 7
 
     # Not one measured value may appear anywhere in the payload.
+    # Every value the fixture sets, including the Phase 4B ones. A metric added
+    # without a line here would be a metric whose leak nobody checks.
     for value in ("431", "92.0", "96.5", "612", "7.4", "54.0", "44.0", "8423",
-                  "61.0", "42.7"):
+                  "61.0", "42.7", "24.6", "98.0", "96.0", "12.0"):
         assert value not in blob, f"diagnostics leaked a health value: {value}"
     assert "secret" not in blob
 

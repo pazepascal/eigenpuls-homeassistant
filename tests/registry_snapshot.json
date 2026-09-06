@@ -73,6 +73,14 @@
       "mean_type": "none",
       "has_sum": true
     },
+    "blood_glucose": {
+      "statistic_id": "apple_health_sync:blood_glucose",
+      "kind": "hourly_discrete",
+      "unit": "mg/dL",
+      "unit_class": "blood_glucose_concentration",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
     "blood_pressure_diastolic": {
       "statistic_id": "apple_health_sync:blood_pressure_diastolic",
       "kind": "hourly_discrete",
@@ -86,6 +94,14 @@
       "kind": "hourly_discrete",
       "unit": "mmHg",
       "unit_class": "pressure",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "bmi": {
+      "statistic_id": "apple_health_sync:bmi",
+      "kind": "hourly_discrete",
+      "unit": "kg/m²",
+      "unit_class": null,
       "mean_type": "arithmetic",
       "has_sum": false
     },
@@ -110,6 +126,14 @@
       "kind": "daily_cumulative",
       "unit": "km",
       "unit_class": "distance",
+      "mean_type": "none",
+      "has_sum": true
+    },
+    "flights_climbed": {
+      "statistic_id": "apple_health_sync:flights_climbed",
+      "kind": "daily_cumulative",
+      "unit": "flights",
+      "unit_class": null,
       "mean_type": "none",
       "has_sum": true
     },
@@ -181,6 +205,14 @@
       "statistic_id": "apple_health_sync:vo2_max",
       "kind": "hourly_discrete",
       "unit": "ml/kg/min",
+      "unit_class": null,
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "walking_heart_rate_average": {
+      "statistic_id": "apple_health_sync:walking_heart_rate_average",
+      "kind": "daily_discrete",
+      "unit": "bpm",
       "unit_class": null,
       "mean_type": "arithmetic",
       "has_sum": false

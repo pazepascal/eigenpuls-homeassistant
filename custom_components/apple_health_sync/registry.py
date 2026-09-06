@@ -328,6 +328,63 @@ METRICS: Final[dict[str, MetricSpec]] = {
             "hours", None, BucketKind.DAILY_DISCRETE,
             mean_only=True, snapshot_key="",
         ),
+        # --- Phase 4B: the last four of the target catalogue -------------
+        #
+        # Four ordinary metrics in three shapes that already exist. None of them
+        # needs a new bucket family, a new snapshot composite or a new read
+        # path, which is the point: Activity was the hard one.
+        #
+        # Flights climbed is steps' twin - the SDK header says "count,
+        # Cumulative" for both - so it is a daily total with an opaque unit and
+        # Home Assistant's own week and month rollups answer "how much climbing
+        # this month" directly.
+        _cumulative("flights_climbed", "flights_climbed", "Flights climbed",
+                    "flights", None),
+        # Apple derives one walking average per day, exactly as it does for
+        # resting heart rate, so this is that metric's twin: daily, mean only,
+        # and a min/max spread would be invented rather than measured. The SDK
+        # header declares both as "count/min, Discrete (Temporally Weighted)".
+        #
+        # Read from Apple's own type rather than computed from walking heart
+        # rate samples: Apple's definition of which beats count is not ours to
+        # reconstruct, and reconstructing it would produce a number that
+        # disagrees with the Health app.
+        _discrete(
+            "walking_heart_rate_average", "walking_heart_rate_average",
+            "Walking heart rate average", "bpm", None,
+            BucketKind.DAILY_DISCRETE, mean_only=True,
+        ),
+        # Body mass index is a body metric and takes the body-metric shape:
+        # hourly and sparse, so a morning and an evening reading stay distinct
+        # instead of being averaged into a number nobody measured.
+        #
+        # `kg/m²` rather than no unit at all. HealthKit models this type as
+        # `count` because HKUnit has no compound unit for it, not because the
+        # quantity is dimensionless - it is mass over height squared and always
+        # was. Home Assistant knows no converter for it, so `unit_class` is None
+        # like `bpm` and `ml/kg/min`, and nothing is scaled on the way out.
+        #
+        # Read, never computed. Apple Health already holds a BMI value; deriving
+        # a second one from weight and height would produce a number that
+        # disagrees with the Health app whenever the stored height is stale.
+        _discrete("bmi", "bmi", "Body mass index", "kg/m²", None,
+                  BucketKind.HOURLY_DISCRETE),
+        # Hourly for the same reason as blood pressure: time of day is the
+        # signal, and a daily mean would average a fasting reading with a
+        # post-meal one into something that describes neither.
+        #
+        # mg/dL is HealthKit's own canonical unit for the type. Home Assistant
+        # 2026.9.1 has a real converter for it - measured, not assumed:
+        # `blood_glucose_concentration` accepts mg/dL and mmol/L - so a person
+        # who reads in mmol/L gets that conversion from Home Assistant rather
+        # than from a second wire format.
+        #
+        # The receiver transports what Apple Health already holds and stops
+        # there. No reference range, no high/low classification, no device or
+        # CGM integration, and nothing that could be read as a clinical
+        # statement. A number and its unit.
+        _discrete("blood_glucose", "blood_glucose", "Blood glucose", "mg/dL",
+                  "blood_glucose_concentration", BucketKind.HOURLY_DISCRETE),
     )
 }
 

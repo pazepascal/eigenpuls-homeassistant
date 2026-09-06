@@ -623,6 +623,67 @@ wrong the moment a goal changes.
 Apple's guidance applies to anyone building on this: the data may be used, but a
 dashboard must not imitate the Activity ring graphic.
 
+## 9b. Phase 4B: the last four catalogue metrics
+
+Four ordinary metrics in three shapes that already existed. No new bucket
+family, no new snapshot composite, no new read path — deliberately, because
+Activity was the hard one and these should not have been.
+
+| metric | family | unit | unit_class | mean | sum | snapshot key |
+|---|---|---|---|---|---|---|
+| `flights_climbed` | daily cumulative | flights | — | none | yes | `flights_climbed_today` |
+| `walking_heart_rate_average` | daily discrete, mean only | bpm | — | arithmetic | no | `walking_heart_rate_average` |
+| `bmi` | hourly discrete | kg/m² | — | arithmetic | no | `bmi` |
+| `blood_glucose` | hourly discrete | mg/dL | `blood_glucose_concentration` | arithmetic | no | `blood_glucose` |
+
+Every shape is Apple's, read from `HKTypeIdentifiers.h` in the 26.5 SDK rather
+than chosen:
+
+```
+FlightsClimbed            // count, Cumulative
+WalkingHeartRateAverage   // count/min, Discrete (Temporally Weighted)
+BodyMassIndex             // count, Discrete (Arithmetic)
+BloodGlucose              // mg/dL, Discrete (Arithmetic)
+```
+
+`flights_climbed` is steps' twin and gets steps' treatment. The walking average
+is one value per day, exactly as resting heart rate is, so it is mean-only and a
+min/max spread is rejected rather than invented.
+
+BMI and blood glucose are **hourly**, which looks odd for a value read once a
+week until you notice it is the same argument the body metrics already won: a
+daily mean of a morning and an evening reading is a number nobody measured. For
+glucose that argument is stronger, not weaker — a fasting reading and a
+post-meal one describe different things.
+
+### Two things read rather than computed
+
+`walking_heart_rate_average` is Apple's own quantity type, not a mean this
+bridge takes over walking heart-rate samples. `bmi` is Apple's stored value, not
+weight over height squared — height is not carried at all. Either
+reconstruction would produce a number that disagrees with the Health app, which
+is worse than not carrying the metric.
+
+### `kg/m²`, and why the unit is not empty
+
+HealthKit models body mass index as `count` because `HKUnit` has no compound
+unit for it, not because the quantity is dimensionless: it is mass over height
+squared. Home Assistant knows no converter for `kg/m²`, so the unit class is
+None — the same answer `bpm` and `ml/kg/min` get, and for the same reason.
+
+### Blood glucose is transported, never interpreted
+
+`mg/dL` is HealthKit's canonical unit for the type. Home Assistant 2026.9.1 has
+a real converter for it — measured, not assumed: the `blood_glucose_concentration`
+class accepts mg/dL and mmol/L — so a person who reads in mmol/L gets that
+conversion from Home Assistant rather than from a second wire format.
+
+That device class is the only thing the receiver adds, and it buys a unit
+conversion, not a judgement. There is no reference range, no high/low
+classification, no `PERCENT_METRICS`-style plausibility check, and no device or
+CGM integration. A value far outside any normal range is still the value Apple
+Health holds and is stored exactly as sent.
+
 ## 10. Limits
 
 | limit | value |
@@ -637,6 +698,14 @@ dashboard must not imitate the Activity ring graphic.
 The v4 daily ceiling is higher because v4 carries a bucket per metric per day:
 seven daily metrics across the widest 14-day recovery window is 98 buckets, which
 the v3 ceiling of 40 would have refused.
+
+As of Phase 4B there are **22 daily metrics**, so a full 14-day window is 308 of
+the 400 available. The figure that runs out first is not this one but the
+client's per-metric allowance, which divides the ceiling by the daily metric
+count: at 28 daily metrics a 14-day window no longer fits, and the window
+silently shortens instead. Any design that *multiplies* metrics — a
+per-category workout aggregate, say — has to be measured against that number
+before it is built, not after.
 
 The hourly ceilings are two-tier and both are enforced by **rejecting** an
 oversized request, never by trimming. Per metric first, so one series can never

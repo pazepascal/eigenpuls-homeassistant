@@ -313,6 +313,13 @@ DISPLAY_PRECISION: Final[dict[str, int]] = {
     "activity_stand_hours": 0,
     "activity_stand_goal": 0,
 
+    # Phase 4B. Flights and walking heart rate are whole numbers in Apple
+    # Health; BMI is shown to one decimal there; glucose is whole in mg/dL.
+    "flights_climbed_today": 0,
+    "walking_heart_rate_average": 0,
+    "bmi": 1,
+    "blood_glucose": 0,
+
     # Whole units: Apple Health itself shows no decimals for these.
     "heart_rate": 0,
     "resting_heart_rate": 0,
@@ -560,6 +567,30 @@ SENSORS: tuple[AppleHealthSensorEntityDescription, ...] = (
         "distance_walking_running", key="distance_today", cumulative=True,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    # --- Phase 4B ------------------------------------------------------------
+    #
+    # No device class for flights: Home Assistant has none, and `flights` is not
+    # a unit any converter knows.
+    _metric_sensor(
+        "flights_climbed", key="flights_climbed_today", cumulative=True,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    # No device class, like resting heart rate: `bpm` has none to offer.
+    _metric_sensor(
+        "walking_heart_rate_average", key="walking_heart_rate_average",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # No device class: Home Assistant has none for body mass index, and
+    # `weight` would be wrong - it would offer conversion to pounds.
+    _metric_sensor("bmi", key="bmi", state_class=SensorStateClass.MEASUREMENT),
+    # This one does have a device class, and it earns its place: Home Assistant
+    # knows the unit and can show mmol/L to a person who reads in mmol/L,
+    # without a second wire format. It adds a conversion, not an interpretation.
+    _metric_sensor(
+        "blood_glucose", key="blood_glucose",
+        device_class=SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # --- Phase 3C: cardio fitness ---
     #

@@ -66,7 +66,7 @@ def hourly(metric: str):
 
 def test_the_support_lists_cover_the_whole_registry():
     assert set(registry.SUPPORTED_METRICS) == set(registry.METRICS)
-    assert len(registry.SUPPORTED_METRICS) == 26
+    assert len(registry.SUPPORTED_METRICS) == 30
 
 
 def test_the_support_lists_are_sorted_and_free_of_duplicates():

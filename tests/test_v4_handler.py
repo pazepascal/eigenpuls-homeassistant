@@ -211,7 +211,7 @@ async def test_an_unknown_metric_no_longer_fails_the_whole_request():
     body = v4(buckets={"daily": [
         {"metric": "steps", "date": datetime.now(UTC).date().isoformat(),
          "time_zone": TZ, "total": 8000.0},
-        {"metric": "blood_glucose", "date": datetime.now(UTC).date().isoformat(),
+        {"metric": "not_a_metric", "date": datetime.now(UTC).date().isoformat(),
          "time_zone": TZ, "total": 5.4},
     ]})
 

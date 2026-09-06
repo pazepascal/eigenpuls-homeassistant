@@ -180,7 +180,7 @@ def test_an_unknown_metric_is_reported_not_ignored():
     skew, not a protocol violation, and an App Store update reaches a phone long
     before a HACS update reaches the instance behind it.
     """
-    body = envelope(buckets=buckets(daily=[day("blood_glucose", total=5.4)]))
+    body = envelope(buckets=buckets(daily=[day("not_a_metric", total=5.4)]))
     payload = parse(body, now=NOW)
 
     assert [r.reason for r in payload.rejected] == ["unknown_metric"]
@@ -204,7 +204,7 @@ def test_a_known_metric_survives_an_unknown_one_beside_it():
     """
     body = envelope(
         buckets=buckets(
-            daily=[day("steps", total=1000), day("blood_glucose", total=5.4)]
+            daily=[day("steps", total=1000), day("not_a_metric", total=5.4)]
         )
     )
     payload = parse(body, now=NOW)
@@ -632,8 +632,8 @@ def test_the_daily_ceiling_accommodates_every_metric_across_the_widest_window():
     # Twelve daily metrics: naps and the three training aggregates included.
     # Twenty daily metrics now, the eight Activity series included. 280 of a
     # 400 ceiling - still headroom, and worth watching as Phase 4 continues.
-    assert len(daily) == 280
-    assert len(parse(envelope(buckets=buckets(daily=daily)), now=NOW).history.daily) == 280
+    assert len(daily) == 308
+    assert len(parse(envelope(buckets=buckets(daily=daily)), now=NOW).history.daily) == 308
 
 
 def test_too_many_nights_are_refused():

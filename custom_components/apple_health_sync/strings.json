@@ -187,6 +187,18 @@
           "active_energy": "Active Energy",
           "move_time": "Move Time"
         }
+      },
+      "flights_climbed_today": {
+        "name": "Flights Climbed Today"
+      },
+      "walking_heart_rate_average": {
+        "name": "Walking Heart Rate Average"
+      },
+      "bmi": {
+        "name": "Body Mass Index"
+      },
+      "blood_glucose": {
+        "name": "Blood Glucose"
       }
     }
   }
