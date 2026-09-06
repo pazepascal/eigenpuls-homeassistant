@@ -162,3 +162,109 @@ async def test_waiting_between_batches_was_always_fine(
         await async_wait_recording_done(hass)
 
     assert not breaks_in(await sums(hass))
+
+
+async def test_a_second_pass_heals_a_chain_that_is_already_broken(
+    recorder_mock, hass: HomeAssistant, slow_recorder_writes
+):
+    """What repairing the existing production history would actually take.
+
+    The fix above stops new breaks. It does nothing for the ones already
+    written, and those do not heal on their own: the rolling window rewrites
+    only its own days, and it rewrites them onto whatever baseline it finds, so
+    a shift that happened in June is carried forward for ever.
+
+    This measures the repair rather than assuming it. A broken chain is built
+    the way production's was - a downward shift starting at a batch boundary,
+    with the daily values themselves left intact, because the daily values were
+    never wrong. Then the same batches are sent again over the same days.
+
+    They are not added to the old rows, they replace them, and each batch reads
+    a baseline that the batch before it has already corrected. So the correction
+    propagates forward and the chain comes out whole. No deletion, no writing to
+    the database by hand.
+    """
+    from homeassistant.components.recorder.statistics import (
+        async_add_external_statistics,
+    )
+
+    from custom_components.apple_health_sync.registry import METRICS
+    from custom_components.apple_health_sync.statistics import (
+        day_start_utc,
+        metadata_for,
+    )
+
+    for offset in (0, 14, 28, 42):
+        await async_import_history(hass, batch(offset))
+    assert not breaks_in(await sums(hass))
+
+    # Reproduce the damage: from day 28 on, every sum is short by one batch.
+    # `state` keeps the day's own value - that half was always correct.
+    spec = METRICS["steps"]
+    shifted = [
+        {
+            "start": day_start_utc(bucket),
+            "state": 1000.0,
+            "sum": 1000.0 * (28 + n + 1) - 14000.0,
+        }
+        for n, bucket in enumerate(batch(28, days=28).daily)
+    ]
+    async_add_external_statistics(hass, metadata_for(spec), shifted)
+    await async_wait_recording_done(hass)
+
+    damaged = await sums(hass)
+    assert breaks_in(damaged) == [28], "the damage is the one production had"
+
+    for offset in (0, 14, 28, 42):
+        await async_import_history(hass, batch(offset))
+
+    healed = await sums(hass)
+    assert not breaks_in(healed)
+    assert healed == [1000.0 * n for n in range(1, 57)]
+    assert len(healed) == len(damaged), "repaired in place, no rows added"
+
+
+async def test_a_repair_pass_that_starts_after_the_break_does_not_heal_it(
+    recorder_mock, hass: HomeAssistant, slow_recorder_writes
+):
+    """The one condition the repair has, made executable rather than advisory.
+
+    Each batch builds on the baseline it reads, so a repair inherits whatever
+    stands before its first day. Start it after the break and it faithfully
+    rebuilds the chain on top of the shift: every later day is still short, and
+    the break itself is untouched.
+
+    In operational terms: the range has to reach back to at least the first
+    break, not merely to somewhere in the damaged stretch.
+    """
+    from homeassistant.components.recorder.statistics import (
+        async_add_external_statistics,
+    )
+
+    from custom_components.apple_health_sync.registry import METRICS
+    from custom_components.apple_health_sync.statistics import (
+        day_start_utc,
+        metadata_for,
+    )
+
+    for offset in (0, 14, 28, 42):
+        await async_import_history(hass, batch(offset))
+
+    async_add_external_statistics(hass, metadata_for(METRICS["steps"]), [
+        {
+            "start": day_start_utc(bucket),
+            "state": 1000.0,
+            "sum": 1000.0 * (28 + n + 1) - 14000.0,
+        }
+        for n, bucket in enumerate(batch(28, days=28).daily)
+    ])
+    await async_wait_recording_done(hass)
+    assert breaks_in(await sums(hass)) == [28]
+
+    # A repair that begins inside the damage instead of before it.
+    for offset in (42,):
+        await async_import_history(hass, batch(offset))
+
+    assert breaks_in(await sums(hass)) == [28], (
+        "the break is still there, and it will stay there until a pass covers it"
+    )
