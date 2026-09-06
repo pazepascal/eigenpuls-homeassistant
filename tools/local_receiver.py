@@ -23,15 +23,15 @@ from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "homeassistant" / "custom_components"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from apple_health_sync.payload import (  # noqa: E402
+from custom_components.apple_health_sync.payload import (
     MAX_BODY_BYTES,
     WIRE_VERSION,
     PayloadError,
     parse,
 )
-from apple_health_sync.state import HealthState  # noqa: E402
+from custom_components.apple_health_sync.state import HealthState
 
 STATE = HealthState()
 TOKEN = ""
@@ -49,7 +49,8 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def do_POST(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
+    # Name mandated by BaseHTTPRequestHandler, not by us.
+    def do_POST(self) -> None:
         header = self.headers.get("Authorization", "")
         scheme, _, presented = header.partition(" ")
         if scheme.lower() != "bearer" or not hmac.compare_digest(presented.strip(), TOKEN):
