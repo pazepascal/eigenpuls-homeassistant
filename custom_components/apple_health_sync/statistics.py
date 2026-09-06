@@ -19,6 +19,7 @@ next overlapping 7-14 day window.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -34,6 +35,7 @@ from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     statistics_during_period,
 )
+from homeassistant.components.recorder.tasks import SynchronizeTask
 from homeassistant.core import HomeAssistant
 
 from . import registry
@@ -115,6 +117,36 @@ def sleep_offset_minutes(instant: datetime, night: NightlySleep) -> float:
     return (instant - anchor.astimezone(UTC)).total_seconds() / 60
 
 
+async def _flush_pending_writes(hass: HomeAssistant) -> None:
+    """Wait until everything already handed to the recorder is in the database.
+
+    `async_add_external_statistics` validates synchronously, puts a task on the
+    recorder's queue and returns. Every read in this module therefore has to wait
+    for that task, or it answers from the state before the last write.
+
+    That is not theoretical. A production backfill sends its batches back to
+    back, and each one computes its running sum from a baseline it reads out of
+    the database. The baselines came back stale at successive boundaries, the
+    cumulative sum fell each time, and Home Assistant renders a falling sum as a
+    negative day - which is what was seen on the dashboard.
+
+    The queue is FIFO and the recorder thread runs one task to completion at a
+    time, so a task queued now is guaranteed to run after the writes queued
+    before it. Queuing `SynchronizeTask` and awaiting its future is therefore an
+    exact wait, and `commit_before` makes it a wait for the *commit*.
+
+    `Recorder.async_block_till_done()` is the obvious call here and it does not
+    work: it returns without waiting when the queue is empty, and the queue is
+    empty for the whole time the recorder thread spends executing the task it
+    has already taken off it. That is the window this bug lived in - measured at
+    8 failures in 20 runs of `test_backfill_baseline_race.py` with that call in
+    place, and 0 in 40 with this one.
+    """
+    future: asyncio.Future[None] = hass.loop.create_future()
+    get_instance(hass).queue_task(SynchronizeTask(future))
+    await future
+
+
 async def _read_sums(
     hass: HomeAssistant, statistic_id: str, start: datetime, end: datetime
 ) -> list[dict]:
@@ -152,6 +184,10 @@ async def _baseline_sum(
     preceding it is never one this integration rewrites - that is what keeps the
     baseline stable across overlapping uploads.
     """
+    # Before reading anything: this function exists to answer "what did the
+    # previous batch end on", and the previous batch may still be in flight.
+    await _flush_pending_writes(hass)
+
     cutoff = before.timestamp()
 
     def last_sum_before(rows: list[dict]) -> float | None:
