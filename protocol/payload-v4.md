@@ -847,17 +847,17 @@ than old buckets, which is a silent loss of exactly the kind this protocol
 exists to prevent.
 
 **The total is no longer comfortable, and Phase 6B is where that changed.**
-There are now **16 hourly series**, and the per-metric allowance permits
-16 × 400 = 6400 against a total of 2000 — so the ceilings alone do not keep a
+There are now **12 hourly series**, and the per-metric allowance permits
+12 × 400 = 4800 against a total of 2000 — so the ceilings alone do not keep a
 delivery legal. What kept it legal was that the sparse metrics stay sparse, and
-that was true when three of them were.
+that was easy to rely on while there were four of them.
 
 Counted rather than assumed, for someone who tracks intensively over the sparse
 metrics' 90-day horizon: heart rate 336, a CGM at its 400 cap, two blood
 pressure series at 180 each, body mass / body fat / BMI / lean body mass at 90
 each, heart-rate recovery around 65, VO2 max around 13, height 1, temperature a
-handful. That is roughly **1,900 of 2,000**. It fits, and it no longer fits with
-room to spare.
+handful. That is roughly **1,540 of 2,000**. It fits, and it no longer fits with
+the margin this section used to claim.
 
 So the client mirrors the total ceiling as well as the per-metric one, and trims
 to it by raising a shared cap until the total fits — which clips the densest
