@@ -51,6 +51,24 @@ async def read_body(content: Any, limit: int) -> bytes:
     """
     chunks: list[bytes] = []
     total = 0
+
+    if not hasattr(content, "iter_chunked"):
+        # Home Assistant Cloud relays a cloudhook by constructing a MockRequest,
+        # whose stream is a MockStreamReader: it offers read() and not
+        # iter_chunked(). Reading in a loop until EOF applies the same limit to
+        # the same bytes; the real path below is left exactly as it was rather
+        # than unified, because that one has a year of production behind it and
+        # its warning about partial reads is specific to real sockets.
+        while True:
+            chunk = await content.read(_READ_CHUNK_BYTES)
+            if not chunk:
+                break
+            total += len(chunk)
+            if total > limit:
+                raise BodyTooLarge
+            chunks.append(chunk)
+        return b"".join(chunks)
+
     async for chunk in content.iter_chunked(_READ_CHUNK_BYTES):
         total += len(chunk)
         if total > limit:
@@ -108,8 +126,12 @@ def _make_handler(entry: ConfigEntry):
 
         # Cheap rejection when the client declares an oversized body up front.
         # Not sufficient on its own: Content-Length is absent under chunked
-        # transfer encoding, and a client may understate it.
-        if (length := request.content_length) is not None and length > MAX_BODY_BYTES:
+        # transfer encoding, and a client may understate it - and absent
+        # entirely on a cloudhook, where Home Assistant Cloud hands us a
+        # MockRequest that has no such attribute at all. The real limit is
+        # enforced while reading, so missing it here costs nothing.
+        length = getattr(request, "content_length", None)
+        if length is not None and length > MAX_BODY_BYTES:
             return _json_response({"ok": False, "error": "payload_too_large"}, status=413)
 
         try:
