@@ -87,6 +87,43 @@ def test_english_names_stay_ascii():
         assert name.isascii(), f"{key}: {name}"
 
 
+def test_english_translations_are_a_copy_of_strings_not_a_second_voice():
+    """``translations/en.json`` may say less than ``strings.json``, never something else.
+
+    Home Assistant falls back to ``strings.json`` for any key a translation file
+    omits, so an incomplete ``en.json`` costs nothing — it has never held the
+    entity names that came before v1.3.0 and nobody noticed, because the fallback
+    is already English.
+
+    What does cost something is disagreeing. When both files carry a key, the
+    English one that wins is whichever HA loads, so drift shows up as two
+    capitalisation styles on one dashboard. That is exactly what happened when
+    Activity landed: every one of its eleven strings arrived as "Move energy"
+    while all forty existing entries were Title Case, and no test looked at
+    ``en.json`` at all.
+    """
+
+    def flatten(data: dict, prefix: str = "") -> dict[str, str]:
+        flat: dict[str, str] = {}
+        for key, value in data.items():
+            if isinstance(value, dict):
+                flat.update(flatten(value, f"{prefix}{key}."))
+            else:
+                flat[f"{prefix}{key}"] = value
+        return flat
+
+    def load(filename: str) -> dict[str, str]:
+        return flatten(json.loads((COMPONENT / filename).read_text(encoding="utf-8")))
+
+    source, english = load("strings.json"), load("translations/en.json")
+
+    invented = sorted(set(english) - set(source))
+    assert not invented, f"en.json has keys strings.json does not: {invented}"
+
+    drifted = {k: (source[k], english[k]) for k in english if source[k] != english[k]}
+    assert not drifted, f"en.json disagrees with strings.json: {drifted}"
+
+
 # --- Against a real registry, in German -------------------------------------
 
 

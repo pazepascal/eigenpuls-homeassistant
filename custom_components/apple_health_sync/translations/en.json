@@ -66,34 +66,34 @@
         "name": "Last Sync"
       },
       "activity_move_energy": {
-        "name": "Move energy"
+        "name": "Move Energy"
       },
       "activity_move_energy_goal": {
-        "name": "Move energy goal"
+        "name": "Move Energy Goal"
       },
       "activity_move_time": {
-        "name": "Move time"
+        "name": "Move Time"
       },
       "activity_move_time_goal": {
-        "name": "Move time goal"
+        "name": "Move Time Goal"
       },
       "activity_exercise_time": {
-        "name": "Exercise time"
+        "name": "Exercise Time"
       },
       "activity_exercise_goal": {
-        "name": "Exercise goal"
+        "name": "Exercise Goal"
       },
       "activity_stand_hours": {
-        "name": "Stand hours"
+        "name": "Stand Hours"
       },
       "activity_stand_goal": {
-        "name": "Stand goal"
+        "name": "Stand Goal"
       },
       "activity_move_mode": {
-        "name": "Move mode",
+        "name": "Move Mode",
         "state": {
-          "active_energy": "Active energy",
-          "move_time": "Move time"
+          "active_energy": "Active Energy",
+          "move_time": "Move Time"
         }
       }
     }

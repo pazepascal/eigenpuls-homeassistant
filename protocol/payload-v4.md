@@ -505,17 +505,21 @@ snapshot is applied, `last_sync` does not advance and no entity update is
 dispatched — so a failed sleep import can never be reported to the person as a
 completed sync.
 
-## 9a. Activity Summary — implemented on the receiver, unreleased
+## 9a. Activity Summary
 
-Reserved in Phase 4A.1, implemented on this side in Phase 4A.2. **The receiver
-now understands all of it**: the eight metrics are in the registry, the parser
-accepts `snapshot.activity`, the sensors exist, and both `supported_metrics` and
+Reserved in Phase 4A.1, implemented on this side in Phase 4A.2, released in
+1.4.0. The eight metrics are in the registry, the parser accepts
+`snapshot.activity`, the sensors exist, and both `supported_metrics` and
 `supported_features` publish it.
 
-**The client sends none of it yet** (4A.3), and **nothing is released** (4A.5) —
-the productive instance still runs a version that knows nothing about activity,
-which is exactly the case the forward-compatibility layer in §8.1 handles: it
-does not publish the feature, so the client withholds the whole source.
+Every installation still running 1.3.x or earlier knows none of that, which is
+the case the forward-compatibility layer in §8.1 exists for: it publishes no
+feature list at all, the client falls back to the frozen v4 baseline and
+withholds the whole source. Measured against the code at the `v1.3.1` tag, not
+asserted: unfiltered, a payload carrying Activity makes that version raise
+`unknown_metric` and reject the entire delivery — so withholding is not a
+nicety, it is what keeps the other fourteen sources working until the receiver
+is upgraded.
 
 Measured before the unit was chosen: Home Assistant 2026.9.1 has a statistics
 converter for `h` but **none for `hours`**. That is why stand hours use the
