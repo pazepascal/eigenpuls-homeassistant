@@ -62,6 +62,16 @@ def url_patch(*, external: str | None, internal: str | None):
     return patch(f"{FLOW}.get_url", _get_url)
 
 
+def pairing_code(result) -> str:
+    """The code the form offers, read where the person reads it.
+
+    It moved out of the description text and into a selectable field, so the
+    tests follow it there rather than asserting against a placeholder that no
+    longer carries it.
+    """
+    return result["data_schema"]({})["code"]
+
+
 async def start(hass: HomeAssistant):
     return await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -83,7 +93,7 @@ async def test_cloud_subscription_produces_a_remote_pairing_code(hass: HomeAssis
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
 
-    payload = decode(result["description_placeholders"]["code"])
+    payload = decode(pairing_code(result))
     assert payload.url == CLOUDHOOK
     assert payload.reach is Reach.REMOTE
 
@@ -94,7 +104,7 @@ async def test_without_cloud_a_usable_external_url_is_used(hass: HomeAssistant, 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["step_id"] == "pair"
-    payload = decode(result["description_placeholders"]["code"])
+    payload = decode(pairing_code(result))
     assert payload.url.startswith("https://ha.example.com/api/webhook/")
     assert payload.reach is Reach.REMOTE
 
@@ -107,7 +117,7 @@ async def test_only_a_local_url_pairs_as_home_network_only(hass: HomeAssistant, 
     # A different step id, because the wording has to be honest about this and
     # a substituted placeholder would not survive translation.
     assert result["step_id"] == "pair_local"
-    payload = decode(result["description_placeholders"]["code"])
+    payload = decode(pairing_code(result))
     assert payload.reach is Reach.LOCAL
 
 
@@ -169,7 +179,7 @@ async def test_confirming_stores_the_credentials_and_the_cloudhook(
     with url_patch(external=None, internal=None):
         result = await start(hass)
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        code = result["description_placeholders"]["code"]
+        code = pairing_code(result)
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     data = result["data"]
@@ -214,7 +224,7 @@ async def test_reconfigure_rotates_the_token_and_keeps_the_entry(hass: HomeAssis
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["step_id"] == "reconfigure_pair"
-        code = result["description_placeholders"]["code"]
+        code = pairing_code(result)
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -293,7 +303,7 @@ async def test_the_token_is_never_logged(hass: HomeAssistant, fake_cloud, caplog
     with url_patch(external=None, internal=None):
         result = await start(hass)
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        token = decode(result["description_placeholders"]["code"]).token
+        token = decode(pairing_code(result)).token
         await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert token not in caplog.text

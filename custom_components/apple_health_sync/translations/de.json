@@ -8,8 +8,11 @@
       },
       "pair": {
         "title": "Mit Eigenpuls scannen",
-        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den Code.\n\nScannen nicht möglich? Dann kopiere stattdessen dies:\n\n```\n{code}\n```\n\n**Dieser Code enthält die Zugangsdaten für diese Verbindung. Gib ihn nicht weiter und poste ihn nicht als Screenshot.**\n\nEr wird nur jetzt angezeigt. Falls er verloren geht, erstelle über *Neu konfigurieren* einen neuen.\n\nDiese Verbindung funktioniert auch unterwegs.",
-        "submit": "Gescannt"
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den Code.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Dieser Code enthält die Zugangsdaten für diese Verbindung. Gib ihn nicht weiter und poste ihn nicht als Screenshot.**\n\nEr wird nur jetzt angezeigt. Falls er verloren geht, erstelle über *Neu konfigurieren* einen neuen.\n\nDiese Verbindung funktioniert auch unterwegs.",
+        "submit": "Gescannt",
+        "data": {
+          "code": "Verbindungscode"
+        }
       },
       "reconfigure": {
         "title": "Neu verbinden",
@@ -18,18 +21,27 @@
       },
       "reconfigure_pair": {
         "title": "Mit Eigenpuls scannen",
-        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den neuen Code.\n\nScannen nicht möglich? Dann kopiere stattdessen dies:\n\n```\n{code}\n```\n\n**Der bisherige Code funktioniert nicht mehr, sobald du hier fertig bist.**\n\nDiese Verbindung funktioniert auch unterwegs.",
-        "submit": "Gescannt"
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den neuen Code.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Der bisherige Code funktioniert nicht mehr, sobald du hier fertig bist.**\n\nDiese Verbindung funktioniert auch unterwegs.",
+        "submit": "Gescannt",
+        "data": {
+          "code": "Verbindungscode"
+        }
       },
       "pair_local": {
         "title": "Mit Eigenpuls scannen",
-        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den Code.\n\nScannen nicht möglich? Dann kopiere stattdessen dies:\n\n```\n{code}\n```\n\n**Dieser Code enthält die Zugangsdaten für diese Verbindung. Gib ihn nicht weiter und poste ihn nicht als Screenshot.**\n\nEr wird nur jetzt angezeigt. Falls er verloren geht, erstelle über *Neu konfigurieren* einen neuen.\n\nDiese Verbindung funktioniert nur, solange dein iPhone in deinem Heimnetz ist.",
-        "submit": "Gescannt"
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den Code.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Dieser Code enthält die Zugangsdaten für diese Verbindung. Gib ihn nicht weiter und poste ihn nicht als Screenshot.**\n\nEr wird nur jetzt angezeigt. Falls er verloren geht, erstelle über *Neu konfigurieren* einen neuen.\n\nDiese Verbindung funktioniert nur, solange dein iPhone in deinem Heimnetz ist.",
+        "submit": "Gescannt",
+        "data": {
+          "code": "Verbindungscode"
+        }
       },
       "reconfigure_pair_local": {
         "title": "Mit Eigenpuls scannen",
-        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den neuen Code.\n\nScannen nicht möglich? Dann kopiere stattdessen dies:\n\n```\n{code}\n```\n\n**Der bisherige Code funktioniert nicht mehr, sobald du hier fertig bist.**\n\nDiese Verbindung funktioniert nur, solange dein iPhone in deinem Heimnetz ist.",
-        "submit": "Gescannt"
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den neuen Code.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Der bisherige Code funktioniert nicht mehr, sobald du hier fertig bist.**\n\nDiese Verbindung funktioniert nur, solange dein iPhone in deinem Heimnetz ist.",
+        "submit": "Gescannt",
+        "data": {
+          "code": "Verbindungscode"
+        }
       }
     },
     "error": {
@@ -39,7 +51,7 @@
     },
     "abort": {
       "already_configured": "Eigenpuls ist bereits eingerichtet.",
-      "reconfigure_successful": "Eigenpuls ist neu verbunden. Scanne den neuen Code, falls noch nicht geschehen."
+      "reconfigure_successful": "Neue Zugangsdaten erstellt. Der bisherige Code funktioniert nicht mehr. Trage den neuen Code in Eigenpuls ein, falls noch nicht geschehen – bis dahin kann die App sich nicht verbinden."
     }
   },
   "entity": {

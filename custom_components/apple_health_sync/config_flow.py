@@ -23,7 +23,12 @@ from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.selector import QrCodeSelector, QrCodeSelectorConfig
+from homeassistant.helpers.selector import (
+    QrCodeSelector,
+    QrCodeSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+)
 
 from .const import CONF_CLOUDHOOK_URL, CONF_TOKEN, CONF_WEBHOOK_ID, DOMAIN
 from .pairing import PairingError, Reach, encode, is_usable_target
@@ -103,17 +108,31 @@ def _pair_step_id(base: str, reach: Reach) -> str:
 
 
 def _pair_schema(pairing_uri: str) -> vol.Schema:
-    """The pairing form: a QR code and a confirmation.
+    """The pairing form: a QR code, and the same code as selectable text.
 
-    The code itself is also rendered into the step description so it can be
-    copied - a QR is useless to anyone setting this up on the same machine, or
-    to anyone using a screen reader.
+    The text field is not a leftover - it is the path most people will actually
+    use. A QR is useless to anyone setting this up on the same machine or using
+    a screen reader, and until the ordering problem below is fixed it is the
+    only path that works at all.
+
+    A multiline `TextSelector` rather than a fenced code block in the
+    description: the code block scrolls sideways, so copying it means dragging
+    through text that is mostly off-screen, which was slow and error-prone in
+    practice. A text field wraps, selects with one tap-and-hold, and offers the
+    system's own Select All.
+
+    The field is editable and its value is ignored. That is the cost of there
+    being no read-only text selector; an editable field someone can copy from
+    beats a read-only block they cannot.
     """
     return vol.Schema(
         {
             vol.Optional("qr"): QrCodeSelector(
                 QrCodeSelectorConfig(data=pairing_uri, scale=6)
-            )
+            ),
+            vol.Optional("code", default=pairing_uri): TextSelector(
+                TextSelectorConfig(multiline=True)
+            ),
         }
     )
 
