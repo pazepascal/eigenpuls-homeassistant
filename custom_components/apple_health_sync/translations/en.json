@@ -8,7 +8,7 @@
       },
       "pair": {
         "title": "Scan this with Eigenpuls",
-        "description": "Open Eigenpuls on your iPhone and scan the code.\n\nCan't scan? Copy the code below instead.\n\n**This code contains the access data for this connection. Don't share it, and don't post it in a screenshot.**\n\nIt is shown only now. If you lose it, use *Reconfigure* to create a new one.\n\nThis connection also works when you are away from home.",
+        "description": "Open Eigenpuls on your iPhone and scan the code.\n\nThen tap \"I've scanned it\" below — the app connects on its own from there.\n\nCan't scan? Copy the code below instead.\n\n**Treat this connection code like a password.**\n\nThis connection also works when you are away from home.",
         "submit": "I've scanned it",
         "data": {
           "code": "Connection code"
@@ -21,7 +21,7 @@
       },
       "reconfigure_pair": {
         "title": "Scan this with Eigenpuls",
-        "description": "Open Eigenpuls on your iPhone and scan the new code.\n\nCan't scan? Copy the code below instead.\n\n**The previous code stops working as soon as you finish here.**\n\nThis connection also works when you are away from home.",
+        "description": "Open Eigenpuls on your iPhone and scan the new code.\n\nThen tap \"I've scanned it\" below — the app connects on its own from there. The previous code stops working at that moment.\n\nCan't scan? Copy the code below instead.\n\n**Treat this connection code like a password.**\n\nThis connection also works when you are away from home.",
         "submit": "I've scanned it",
         "data": {
           "code": "Connection code"
@@ -29,7 +29,7 @@
       },
       "pair_local": {
         "title": "Scan this with Eigenpuls",
-        "description": "Open Eigenpuls on your iPhone and scan the code.\n\nCan't scan? Copy the code below instead.\n\n**This code contains the access data for this connection. Don't share it, and don't post it in a screenshot.**\n\nIt is shown only now. If you lose it, use *Reconfigure* to create a new one.\n\nThis connection works only while your iPhone is on your home network.",
+        "description": "Open Eigenpuls on your iPhone and scan the code.\n\nThen tap \"I've scanned it\" below — the app connects on its own from there.\n\nCan't scan? Copy the code below instead.\n\n**Treat this connection code like a password.**\n\nThis connection works only while your iPhone is on your home network.",
         "submit": "I've scanned it",
         "data": {
           "code": "Connection code"
@@ -37,7 +37,7 @@
       },
       "reconfigure_pair_local": {
         "title": "Scan this with Eigenpuls",
-        "description": "Open Eigenpuls on your iPhone and scan the new code.\n\nCan't scan? Copy the code below instead.\n\n**The previous code stops working as soon as you finish here.**\n\nThis connection works only while your iPhone is on your home network.",
+        "description": "Open Eigenpuls on your iPhone and scan the new code.\n\nThen tap \"I've scanned it\" below — the app connects on its own from there. The previous code stops working at that moment.\n\nCan't scan? Copy the code below instead.\n\n**Treat this connection code like a password.**\n\nThis connection works only while your iPhone is on your home network.",
         "submit": "I've scanned it",
         "data": {
           "code": "Connection code"
@@ -51,7 +51,7 @@
     },
     "abort": {
       "already_configured": "Eigenpuls is already set up.",
-      "reconfigure_successful": "New access data created. The previous code no longer works. Enter the new code in Eigenpuls if you have not already — until you do, the app cannot connect."
+      "reconfigure_successful": "Access data created. If you have not scanned the code yet, use *Reconfigure* to create a new one — this one is not shown again."
     }
   },
   "entity": {

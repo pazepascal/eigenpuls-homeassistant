@@ -8,7 +8,7 @@
       },
       "pair": {
         "title": "Mit Eigenpuls scannen",
-        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den Code.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Dieser Code enthält die Zugangsdaten für diese Verbindung. Gib ihn nicht weiter und poste ihn nicht als Screenshot.**\n\nEr wird nur jetzt angezeigt. Falls er verloren geht, erstelle über *Neu konfigurieren* einen neuen.\n\nDiese Verbindung funktioniert auch unterwegs.",
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den Code.\n\nTippe danach hier unten auf „Gescannt“ – die App verbindet sich dann von selbst.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Behandle diesen Verbindungscode wie ein Passwort.**\n\nDiese Verbindung funktioniert auch unterwegs.",
         "submit": "Gescannt",
         "data": {
           "code": "Verbindungscode"
@@ -21,7 +21,7 @@
       },
       "reconfigure_pair": {
         "title": "Mit Eigenpuls scannen",
-        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den neuen Code.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Der bisherige Code funktioniert nicht mehr, sobald du hier fertig bist.**\n\nDiese Verbindung funktioniert auch unterwegs.",
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den neuen Code.\n\nTippe danach hier unten auf „Gescannt“ – die App verbindet sich dann von selbst. Der bisherige Code funktioniert ab diesem Moment nicht mehr.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Behandle diesen Verbindungscode wie ein Passwort.**\n\nDiese Verbindung funktioniert auch unterwegs.",
         "submit": "Gescannt",
         "data": {
           "code": "Verbindungscode"
@@ -29,7 +29,7 @@
       },
       "pair_local": {
         "title": "Mit Eigenpuls scannen",
-        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den Code.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Dieser Code enthält die Zugangsdaten für diese Verbindung. Gib ihn nicht weiter und poste ihn nicht als Screenshot.**\n\nEr wird nur jetzt angezeigt. Falls er verloren geht, erstelle über *Neu konfigurieren* einen neuen.\n\nDiese Verbindung funktioniert nur, solange dein iPhone in deinem Heimnetz ist.",
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den Code.\n\nTippe danach hier unten auf „Gescannt“ – die App verbindet sich dann von selbst.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Behandle diesen Verbindungscode wie ein Passwort.**\n\nDiese Verbindung funktioniert nur, solange dein iPhone in deinem Heimnetz ist.",
         "submit": "Gescannt",
         "data": {
           "code": "Verbindungscode"
@@ -37,7 +37,7 @@
       },
       "reconfigure_pair_local": {
         "title": "Mit Eigenpuls scannen",
-        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den neuen Code.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Der bisherige Code funktioniert nicht mehr, sobald du hier fertig bist.**\n\nDiese Verbindung funktioniert nur, solange dein iPhone in deinem Heimnetz ist.",
+        "description": "Öffne Eigenpuls auf deinem iPhone und scanne den neuen Code.\n\nTippe danach hier unten auf „Gescannt“ – die App verbindet sich dann von selbst. Der bisherige Code funktioniert ab diesem Moment nicht mehr.\n\nScannen nicht möglich? Dann kopiere den Code unten.\n\n**Behandle diesen Verbindungscode wie ein Passwort.**\n\nDiese Verbindung funktioniert nur, solange dein iPhone in deinem Heimnetz ist.",
         "submit": "Gescannt",
         "data": {
           "code": "Verbindungscode"
@@ -51,7 +51,7 @@
     },
     "abort": {
       "already_configured": "Eigenpuls ist bereits eingerichtet.",
-      "reconfigure_successful": "Neue Zugangsdaten erstellt. Der bisherige Code funktioniert nicht mehr. Trage den neuen Code in Eigenpuls ein, falls noch nicht geschehen – bis dahin kann die App sich nicht verbinden."
+      "reconfigure_successful": "Zugangsdaten erstellt. Falls du den Code noch nicht gescannt hast, erstelle über *Neu konfigurieren* einen neuen – dieser wird nicht noch einmal angezeigt."
     }
   },
   "entity": {

@@ -16,12 +16,17 @@ confirms they have scanned it.
 from __future__ import annotations
 
 import secrets
+from contextlib import suppress
 from typing import Any
 
 import voluptuous as vol
 from homeassistant.components import webhook
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.selector import (
     QrCodeSelector,
@@ -96,6 +101,14 @@ async def async_resolve_target(
     raise PairingError("no_usable_url")
 
 
+async def _async_discard_cloudhook(hass: HomeAssistant, webhook_id: str) -> None:
+    """Best effort: an orphan is untidy, a raised exception here is noise."""
+    from homeassistant.components import cloud
+
+    with suppress(Exception):
+        await cloud.async_delete_cloudhook(hass, webhook_id)
+
+
 def _pair_step_id(base: str, reach: Reach) -> str:
     """Pick the step whose wording matches what this connection can actually do.
 
@@ -150,6 +163,31 @@ class AppleHealthSyncConfigFlow(ConfigFlow, domain=DOMAIN):
         self._pairing_uri: str | None = None
         self._reach: Reach | None = None
         self._cloudhook_url: str | None = None
+        self._committed = False
+
+    @callback
+    def async_remove(self) -> None:
+        """Clean up a cloudhook this flow created but never committed.
+
+        Home Assistant calls this whenever the flow goes away, including when
+        the person closes the dialog. Without it, abandoning setup at the
+        pairing screen leaves a public endpoint on their cloud account for a
+        webhook that may never exist - and nothing records it, so nothing else
+        would ever remove it.
+
+        Guarded twice over. Nothing is deleted once the flow has committed,
+        because then the entry owns the cloudhook and `async_remove_entry` is
+        responsible for it. And nothing is deleted if the entry being
+        reconfigured *already* had one, because that hook predates this flow and
+        is still in use by the connection the person is relying on right now.
+        """
+        if self._committed or not self._cloudhook_url or not self._webhook_id:
+            return
+        if self._reused_existing_cloudhook:
+            return
+
+        webhook_id = self._webhook_id
+        self.hass.async_create_task(_async_discard_cloudhook(self.hass, webhook_id))
 
     async def _async_prepare_pairing(self, webhook_id: str) -> str | None:
         """Mint a token and build the pairing code. Returns an error reason."""
@@ -168,6 +206,14 @@ class AppleHealthSyncConfigFlow(ConfigFlow, domain=DOMAIN):
         self._reach = reach
         self._cloudhook_url = cloudhook_url
         return None
+
+    @property
+    def _reused_existing_cloudhook(self) -> bool:
+        """Whether the cloudhook was already the entry's before this flow ran."""
+        if self.source != SOURCE_RECONFIGURE:
+            return False
+        entry = self.hass.config_entries.async_get_entry(self._reconfigure_entry_id)
+        return bool(entry and entry.data.get(CONF_CLOUDHOOK_URL))
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -211,6 +257,7 @@ class AppleHealthSyncConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         if self._cloudhook_url:
             data[CONF_CLOUDHOOK_URL] = self._cloudhook_url
+        self._committed = True
         return self.async_create_entry(title="Apple Health", data=data)
 
     async def async_step_pair_local(
@@ -261,6 +308,7 @@ class AppleHealthSyncConfigFlow(ConfigFlow, domain=DOMAIN):
         updates: dict[str, Any] = {CONF_TOKEN: self._token}
         if self._cloudhook_url:
             updates[CONF_CLOUDHOOK_URL] = self._cloudhook_url
+        self._committed = True
         return self.async_update_reload_and_abort(
             self._get_reconfigure_entry(), data_updates=updates
         )

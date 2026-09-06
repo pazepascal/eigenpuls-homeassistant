@@ -307,3 +307,64 @@ async def test_the_token_is_never_logged(hass: HomeAssistant, fake_cloud, caplog
         await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert token not in caplog.text
+
+
+# --- an abandoned flow must not leave a cloudhook behind ---------------------
+
+
+async def test_abandoning_setup_removes_the_cloudhook_it_created(
+    hass: HomeAssistant, fake_cloud
+):
+    """Otherwise a public endpoint stays on the person's cloud account for a
+    webhook that never existed, with nothing recording it to clean up later."""
+    fake_cloud.subscribed = True
+    with url_patch(external=None, internal=None):
+        result = await start(hass)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["step_id"] == "pair"
+        assert fake_cloud.created_for  # it exists at this point
+
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert fake_cloud.deleted_for == fake_cloud.created_for
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+
+async def test_completing_setup_keeps_the_cloudhook(hass: HomeAssistant, fake_cloud):
+    fake_cloud.subscribed = True
+    with url_patch(external=None, internal=None):
+        result = await start(hass)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # The entry owns it now; removing the entry is what removes the hook.
+    assert fake_cloud.deleted_for == []
+
+
+async def test_abandoning_a_reconfigure_leaves_an_existing_cloudhook_alone(
+    hass: HomeAssistant, fake_cloud
+):
+    """The hook predates this flow and the connection in use depends on it."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        data={
+            CONF_WEBHOOK_ID: "the-same-id",
+            CONF_TOKEN: "the-old-token",
+            CONF_CLOUDHOOK_URL: CLOUDHOOK,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    fake_cloud.subscribed = True
+    with url_patch(external=None, internal=None):
+        result = await entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert fake_cloud.deleted_for == []
+    assert entry.data[CONF_TOKEN] == "the-old-token"
