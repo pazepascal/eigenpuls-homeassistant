@@ -66,7 +66,7 @@ def hourly(metric: str):
 
 def test_the_support_lists_cover_the_whole_registry():
     assert set(registry.SUPPORTED_METRICS) == set(registry.METRICS)
-    assert len(registry.SUPPORTED_METRICS) == 18
+    assert len(registry.SUPPORTED_METRICS) == 26
 
 
 def test_the_support_lists_are_sorted_and_free_of_duplicates():
@@ -80,6 +80,7 @@ def test_every_published_feature_is_something_this_receiver_actually_has():
     # no list at all: the client would send something and lose it silently.
     assert set(registry.SUPPORTED_FEATURES) == {
         "buckets.nightly",
+        "snapshot.activity",
         "snapshot.blood_pressure",
         "snapshot.last_workout",
         "snapshot.sleep_trend",
@@ -170,7 +171,7 @@ def test_an_unknown_snapshot_object_is_accepted_and_ignored():
                     "unit": "count/min",
                     "measured_at": NOW.isoformat(),
                 },
-                "activity": {"move_energy": 300, "move_energy_goal": 600},
+                "mindfulness": {"minutes": 12},
             }
         ),
         now=NOW,
@@ -178,4 +179,4 @@ def test_an_unknown_snapshot_object_is_accepted_and_ignored():
     assert payload.snapshot is not None
     assert payload.snapshot.heart_rate is not None
     # Accepted, and gone. Nothing in the response says so - hence the feature list.
-    assert not hasattr(payload.snapshot, "activity")
+    assert not hasattr(payload.snapshot, "mindfulness")

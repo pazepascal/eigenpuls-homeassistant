@@ -64,6 +64,37 @@
       },
       "last_sync": {
         "name": "Last Sync"
+      },
+      "activity_move_energy": {
+        "name": "Move energy"
+      },
+      "activity_move_energy_goal": {
+        "name": "Move energy goal"
+      },
+      "activity_move_time": {
+        "name": "Move time"
+      },
+      "activity_move_time_goal": {
+        "name": "Move time goal"
+      },
+      "activity_exercise_time": {
+        "name": "Exercise time"
+      },
+      "activity_exercise_goal": {
+        "name": "Exercise goal"
+      },
+      "activity_stand_hours": {
+        "name": "Stand hours"
+      },
+      "activity_stand_goal": {
+        "name": "Stand goal"
+      },
+      "activity_move_mode": {
+        "name": "Move mode",
+        "state": {
+          "active_energy": "Active energy",
+          "move_time": "Move time"
+        }
       }
     }
   }

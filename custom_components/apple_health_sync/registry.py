@@ -272,8 +272,72 @@ METRICS: Final[dict[str, MetricSpec]] = {
                     "min", "duration", snapshot_key=""),
         _cumulative("workout_energy", "workout_energy", "Training energy",
                     "kcal", "energy", snapshot_key=""),
+        # --- Phase 4A.2: Activity Summary -------------------------------
+        #
+        # Move, Exercise and Stand, each with its goal. Contract frozen in
+        # `contract/activity-contract.json` and specified in
+        # protocol/payload-v4.md §9a.
+        #
+        # No individual snapshot entries: every one carries `snapshot_key=""`
+        # and the current-value view is the composite `activity` object, the
+        # same choice blood pressure and `last_workout` already made. The
+        # composite is what carries `move_mode`, and without the mode a bare
+        # move value cannot say whether it is the ring.
+        #
+        # `activity_move_energy` is deliberately NOT `active_energy` and must
+        # never be merged with it. `active_energy` sums Active Energy samples
+        # over the local day from a statistics query and works without an Apple
+        # Watch; this is Apple's own Move-ring figure with Apple's day boundary
+        # and pause handling. They usually agree, they answer different
+        # questions - and when the move mode is `move_time`, `active_energy` is
+        # not the ring at all.
+        _cumulative("activity_move_energy", "activity_move_energy", "Move energy",
+                    "kcal", "energy", snapshot_key=""),
+        _cumulative("activity_move_time", "activity_move_time", "Move time",
+                    "min", "duration", snapshot_key=""),
+        _cumulative("activity_exercise_time", "activity_exercise_time",
+                    "Exercise time", "min", "duration", snapshot_key=""),
+        # `hours` carries no unit class, and that is measured rather than
+        # assumed. Home Assistant 2026.9.1 maps `h` to its DurationConverter but
+        # has no converter for `hours`, so the latter stays an opaque unit like
+        # `steps`, `naps` and `workouts`. That is what this metric needs: it is
+        # a count of hours that *qualified*, not time elapsed, and letting Home
+        # Assistant turn nine stand hours into 540 minutes would be arithmetic
+        # without meaning.
+        _cumulative("activity_stand_hours", "activity_stand_hours", "Stand hours",
+                    "hours", None, snapshot_key=""),
+        # Goals: one value per day. Mean-only, because a min/max spread would be
+        # invented, and not cumulative, because a goal accumulates nothing.
+        _discrete(
+            "activity_move_energy_goal", "activity_move_energy_goal",
+            "Move energy goal", "kcal", "energy", BucketKind.DAILY_DISCRETE,
+            mean_only=True, snapshot_key="",
+        ),
+        _discrete(
+            "activity_move_time_goal", "activity_move_time_goal",
+            "Move time goal", "min", "duration", BucketKind.DAILY_DISCRETE,
+            mean_only=True, snapshot_key="",
+        ),
+        _discrete(
+            "activity_exercise_goal", "activity_exercise_goal",
+            "Exercise goal", "min", "duration", BucketKind.DAILY_DISCRETE,
+            mean_only=True, snapshot_key="",
+        ),
+        _discrete(
+            "activity_stand_goal", "activity_stand_goal", "Stand goal",
+            "hours", None, BucketKind.DAILY_DISCRETE,
+            mean_only=True, snapshot_key="",
+        ),
     )
 }
+
+#: The two move modes, as stable wire strings.
+#:
+#: `HKActivitySummary.activityMoveMode` decides which series *is* the Move ring.
+#: Sent as a string rather than Apple's numeric enum so the wire does not depend
+#: on a platform constant, and closed so an unrecognised value is a rejection
+#: rather than a silent fallback to a guessed default.
+ACTIVITY_MOVE_MODES: Final = ("active_energy", "move_time")
 
 #: The workout vocabulary, deliberately small and closed.
 #:
@@ -429,6 +493,7 @@ SUPPORTED_METRICS: Final[tuple[str, ...]] = tuple(sorted(METRICS))
 #: that reports the list at all. Later features are appended, never renamed.
 SUPPORTED_FEATURES: Final[tuple[str, ...]] = (
     "buckets.nightly",
+    "snapshot.activity",
     "snapshot.blood_pressure",
     "snapshot.last_workout",
     "snapshot.sleep_trend",

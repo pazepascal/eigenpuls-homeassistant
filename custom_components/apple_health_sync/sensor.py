@@ -219,6 +219,12 @@ def _workout_attributes(workout: LastWorkout | None) -> dict[str, Any]:
     }
 
 
+def _restore_move_mode(state: HealthState, last: State) -> None:
+    """Restore the move mode, but only a value that is still in the vocabulary."""
+    if last.state in registry.ACTIVITY_MOVE_MODES:
+        state.activity_move_mode = last.state
+
+
 def _restore_workout(state: HealthState, last: State) -> None:
     """Bring back the last workout's activity and detail after a restart."""
     if state.last_workout is not None:
@@ -294,6 +300,19 @@ def _offset_clock(minutes: float | None) -> str | None:
 #: number, and all three go Unknown. That regression shipped once already
 #: (cd6ea3d) - `test_v4_precision.py` now fails if any of them appears here.
 DISPLAY_PRECISION: Final[dict[str, int]] = {
+    # Activity. Energies and minutes to whole units - Apple's own rings are
+    # whole numbers, and a decimal place would imply a precision the summary
+    # does not have. Stand hours likewise: a fraction of a qualifying hour is
+    # not a thing.
+    "activity_move_energy": 0,
+    "activity_move_energy_goal": 0,
+    "activity_move_time": 0,
+    "activity_move_time_goal": 0,
+    "activity_exercise_time": 0,
+    "activity_exercise_goal": 0,
+    "activity_stand_hours": 0,
+    "activity_stand_goal": 0,
+
     # Whole units: Apple Health itself shows no decimals for these.
     "heart_rate": 0,
     "resting_heart_rate": 0,
@@ -345,6 +364,43 @@ def _metric_sensor(
         value_fn=_or_restored(key, live),
         attrs_fn=_daily_total_attrs(metric) if cumulative else _measurement_attrs(metric),
         restore_fn=_restore_number(key),
+    )
+
+
+def _activity(metric: str) -> Callable[[HealthState], StateType]:
+    """Current value of one activity ring metric.
+
+    Reads the merged dict rather than a snapshot object, which is what makes an
+    absent field leave the previous value in place while an explicit zero
+    replaces it.
+    """
+    def value(state: HealthState) -> StateType:
+        return state.activity_values.get(metric)
+
+    return value
+
+
+def _activity_sensor(
+    metric: str,
+    *,
+    device_class: SensorDeviceClass | None,
+    state_class: SensorStateClass,
+) -> AppleHealthSensorEntityDescription:
+    """One activity current-value sensor, unit taken from the registry."""
+    spec = registry.METRICS[metric]
+    return AppleHealthSensorEntityDescription(
+        key=metric,
+        translation_key=metric,
+        native_unit_of_measurement=spec.unit,
+        suggested_display_precision=DISPLAY_PRECISION.get(metric),
+        device_class=device_class,
+        state_class=state_class,
+        value_fn=_or_restored(metric, _activity(metric)),
+        attrs_fn=lambda state: {
+            "date": state.activity_day.isoformat() if state.activity_day else None,
+            "move_mode": state.activity_move_mode,
+        },
+        restore_fn=_restore_number(metric),
     )
 
 
@@ -713,6 +769,68 @@ SENSORS: tuple[AppleHealthSensorEntityDescription, ...] = (
         # regular sleep schedule.
         value_fn=_or_restored("sleep_7d_consistency", _trend("sleep_start_stddev_min")),
         restore_fn=_restore_number("sleep_7d_consistency"),
+    ),
+    # --- Activity rings ------------------------------------------------------
+    #
+    # Eight values and the mode that says which of them is the Move ring. Every
+    # one is driven by the composite `snapshot.activity` rather than by an
+    # individual snapshot entry, which is why the registry gives them all an
+    # empty snapshot key.
+    #
+    # `activity_stand_hours` and its goal carry **no** device class. Home
+    # Assistant 2026.9.1 has no statistics converter for the unit `hours` - it
+    # does for `h` - and that is exactly right here: these count hours that
+    # qualified, not time elapsed, and a DURATION class would invite Home
+    # Assistant to render nine stand hours as 540 minutes.
+    _activity_sensor(
+        "activity_move_energy",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    _activity_sensor(
+        "activity_move_energy_goal",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    _activity_sensor(
+        "activity_move_time",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    _activity_sensor(
+        "activity_move_time_goal",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    _activity_sensor(
+        "activity_exercise_time",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    _activity_sensor(
+        "activity_exercise_goal",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    _activity_sensor(
+        "activity_stand_hours",
+        device_class=None,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    _activity_sensor(
+        "activity_stand_goal",
+        device_class=None,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Which series is the Move ring. A closed enum, no long-term statistics -
+    # a categorical setting has no meaningful average.
+    AppleHealthSensorEntityDescription(
+        key="activity_move_mode",
+        translation_key="activity_move_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(registry.ACTIVITY_MOVE_MODES),
+        value_fn=lambda state: state.activity_move_mode,
+        restore_fn=_restore_move_mode,
     ),
 )
 

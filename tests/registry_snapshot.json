@@ -9,6 +9,70 @@
       "mean_type": "none",
       "has_sum": true
     },
+    "activity_exercise_goal": {
+      "statistic_id": "apple_health_sync:activity_exercise_goal",
+      "kind": "daily_discrete",
+      "unit": "min",
+      "unit_class": "duration",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "activity_exercise_time": {
+      "statistic_id": "apple_health_sync:activity_exercise_time",
+      "kind": "daily_cumulative",
+      "unit": "min",
+      "unit_class": "duration",
+      "mean_type": "none",
+      "has_sum": true
+    },
+    "activity_move_energy": {
+      "statistic_id": "apple_health_sync:activity_move_energy",
+      "kind": "daily_cumulative",
+      "unit": "kcal",
+      "unit_class": "energy",
+      "mean_type": "none",
+      "has_sum": true
+    },
+    "activity_move_energy_goal": {
+      "statistic_id": "apple_health_sync:activity_move_energy_goal",
+      "kind": "daily_discrete",
+      "unit": "kcal",
+      "unit_class": "energy",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "activity_move_time": {
+      "statistic_id": "apple_health_sync:activity_move_time",
+      "kind": "daily_cumulative",
+      "unit": "min",
+      "unit_class": "duration",
+      "mean_type": "none",
+      "has_sum": true
+    },
+    "activity_move_time_goal": {
+      "statistic_id": "apple_health_sync:activity_move_time_goal",
+      "kind": "daily_discrete",
+      "unit": "min",
+      "unit_class": "duration",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "activity_stand_goal": {
+      "statistic_id": "apple_health_sync:activity_stand_goal",
+      "kind": "daily_discrete",
+      "unit": "hours",
+      "unit_class": null,
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "activity_stand_hours": {
+      "statistic_id": "apple_health_sync:activity_stand_hours",
+      "kind": "daily_cumulative",
+      "unit": "hours",
+      "unit_class": null,
+      "mean_type": "none",
+      "has_sum": true
+    },
     "blood_pressure_diastolic": {
       "statistic_id": "apple_health_sync:blood_pressure_diastolic",
       "kind": "hourly_discrete",

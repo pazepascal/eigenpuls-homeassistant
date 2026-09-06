@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
-from typing import Any, Literal
+from typing import Any, Final, Literal
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -186,6 +186,35 @@ class DailyTotalSnapshot:
 
 
 @dataclass(slots=True)
+class ActivitySnapshot:
+    """One day's Activity rings, as Apple computed them (v4).
+
+    A composite rather than eight independent entries, for the same reason blood
+    pressure is one: the parts only mean something together. ``move_mode`` says
+    which series *is* the Move ring, and a bare move value without it cannot
+    answer that.
+
+    Every value is optional and ``None`` means **not delivered** - never zero.
+    That distinction is load-bearing and was measured on a real device: across a
+    seven-day window one day had no summary at all while another had all three
+    rings at zero. A missing field must leave whatever is already displayed
+    alone; an explicit ``0.0`` is a real measurement and overwrites.
+    """
+
+    day: date
+    time_zone: str
+    move_mode: str
+    move_energy: float | None = None
+    move_energy_goal: float | None = None
+    move_time: float | None = None
+    move_time_goal: float | None = None
+    exercise_time: float | None = None
+    exercise_goal: float | None = None
+    stand_hours: float | None = None
+    stand_goal: float | None = None
+
+
+@dataclass(slots=True)
 class BloodPressureSnapshot:
     """One correlated blood-pressure measurement (v4).
 
@@ -285,6 +314,7 @@ class Snapshot:
     sleep_7d: SleepTrend | None = None
     blood_pressure: BloodPressureSnapshot | None = None
     last_workout: LastWorkout | None = None
+    activity: ActivitySnapshot | None = None
 
 
 @dataclass(slots=True)
@@ -772,6 +802,78 @@ def _parse_blood_pressure(raw: Any, *, now: datetime) -> BloodPressureSnapshot:
     )
 
 
+#: The optional value fields of an activity snapshot, and the metric each one
+#: corresponds to. One table, so a field cannot exist without a metric behind it
+#: or a metric be forgotten here - `test_activity.py` checks both directions.
+ACTIVITY_SNAPSHOT_FIELDS: Final[dict[str, str]] = {
+    "move_energy": "activity_move_energy",
+    "move_energy_goal": "activity_move_energy_goal",
+    "move_time": "activity_move_time",
+    "move_time_goal": "activity_move_time_goal",
+    "exercise_time": "activity_exercise_time",
+    "exercise_goal": "activity_exercise_goal",
+    "stand_hours": "activity_stand_hours",
+    "stand_goal": "activity_stand_goal",
+}
+
+
+def _parse_activity(raw: Any, *, now: datetime) -> ActivitySnapshot:
+    """Parse one day of Activity rings.
+
+    Strict, like the other structured snapshot objects. The historical laxness
+    towards unknown *top-level* snapshot keys is a forward-compatibility
+    property for keys this receiver has never heard of; once `activity` is a
+    known object, its interior follows the same rules as `blood_pressure` and
+    `last_workout` - an unexpected field inside it means the sender believes it
+    is delivering something that will be stored, and it will not be.
+    """
+    if not isinstance(raw, dict):
+        raise PayloadError("bad_snapshot")
+
+    unknown = set(raw) - ({"date", "time_zone", "move_mode"} | set(ACTIVITY_SNAPSHOT_FIELDS))
+    if unknown:
+        raise PayloadError("bad_activity_unknown_field")
+
+    for required in ("date", "time_zone", "move_mode"):
+        if raw.get(required) is None:
+            raise PayloadError("bad_activity_missing_field")
+
+    # A mode outside the closed set is rejected rather than defaulted. Guessing
+    # would silently label whichever series happened to be present as the ring.
+    if raw["move_mode"] not in registry.ACTIVITY_MOVE_MODES:
+        raise PayloadError("bad_activity_move_mode")
+
+    try:
+        day, time_zone = _parse_local_day(raw, now=now)
+    except PayloadError:
+        raise
+    except ValueError as err:
+        raise PayloadError(f"bad_activity_{err}") from err
+
+    values: dict[str, float | None] = {}
+    for field_name in ACTIVITY_SNAPSHOT_FIELDS:
+        entry = raw.get(field_name)
+        if entry is None:
+            # Absent, which is not zero. Left as None so nothing downstream can
+            # mistake "not delivered" for "measured as none".
+            values[field_name] = None
+            continue
+        try:
+            value = _parse_value(entry)
+        except ValueError as err:
+            raise PayloadError(f"bad_activity_{err}") from err
+        # Rings and goals are counts, minutes and kilocalories: none of them can
+        # be negative, and a negative one means the sender is confused rather
+        # than the person having moved backwards.
+        if value < 0:
+            raise PayloadError("bad_activity_bad_value")
+        values[field_name] = value
+
+    return ActivitySnapshot(
+        day=day, time_zone=time_zone, move_mode=raw["move_mode"], **values
+    )
+
+
 def _parse_last_workout(raw: Any, *, now: datetime) -> LastWorkout:
     """Parse the latest workout summary.
 
@@ -874,6 +976,8 @@ def _parse_snapshot(raw: Any, *, now: datetime, version: int) -> Snapshot:
         snapshot.blood_pressure = _parse_blood_pressure(pressure, now=now)
     if (workout := raw.get("last_workout")) is not None:
         snapshot.last_workout = _parse_last_workout(workout, now=now)
+    if (activity := raw.get("activity")) is not None:
+        snapshot.activity = _parse_activity(activity, now=now)
     return snapshot
 
 

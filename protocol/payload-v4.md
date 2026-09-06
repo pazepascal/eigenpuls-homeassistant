@@ -505,14 +505,21 @@ snapshot is applied, `last_sync` does not advance and no entity update is
 dispatched — so a failed sleep import can never be reported to the person as a
 completed sync.
 
-## 9a. Activity Summary — reserved, not implemented
+## 9a. Activity Summary — implemented on the receiver, unreleased
 
-Reserved in Phase 4A.1 so both halves agree before either builds it. **This
-receiver release implements none of it:** the registry carries no activity
-metric, `SUPPORTED_FEATURES` does not list `snapshot.activity`, and a client that
-sent these today would have them rejected per-metric under §9. The client
-withholds them for the same reason — the feature is not published, so the whole
-source stays back.
+Reserved in Phase 4A.1, implemented on this side in Phase 4A.2. **The receiver
+now understands all of it**: the eight metrics are in the registry, the parser
+accepts `snapshot.activity`, the sensors exist, and both `supported_metrics` and
+`supported_features` publish it.
+
+**The client sends none of it yet** (4A.3), and **nothing is released** (4A.5) —
+the productive instance still runs a version that knows nothing about activity,
+which is exactly the case the forward-compatibility layer in §8.1 handles: it
+does not publish the feature, so the client withholds the whole source.
+
+Measured before the unit was chosen: Home Assistant 2026.9.1 has a statistics
+converter for `h` but **none for `hours`**. That is why stand hours use the
+latter — see the table note below.
 
 ### Eight daily metrics
 
@@ -527,11 +534,12 @@ source stays back.
 | `activity_stand_hours` | daily cumulative | hours | — | none | yes |
 | `activity_stand_goal` | daily discrete, mean only | hours | — | arithmetic | no |
 
-`activity_stand_hours` has **no unit class**, and that is deliberate. HealthKit
-reports it as a count, and it is a count — of hours that qualified, not of time
-elapsed. Giving it `duration` would let Home Assistant convert nine stand hours
-into 540 minutes, which is arithmetic without meaning. It follows the
-`steps` / `naps` / `workouts` convention instead.
+`activity_stand_hours` has **no unit class**, and that is measured rather than
+argued. Home Assistant 2026.9.1 maps `h` to its `DurationConverter` and has no
+converter at all for `hours`, so `hours` stays opaque exactly like `steps`,
+`naps` and `workouts`. That is what this metric needs: it counts hours that
+*qualified*, not time elapsed, and `h` would have let Home Assistant render nine
+stand hours as 540 minutes.
 
 Goals are mean-only daily discrete: a day's goal is one value, so a min/max
 spread would be invented, and it accumulates nothing.
@@ -595,6 +603,16 @@ backfill needs no new shape.
 No `move_percent`, `exercise_percent` or `stand_percent`. Home Assistant derives
 value over goal from two statistics, and a stored percentage becomes historically
 wrong the moment a goal changes.
+
+### Errors
+
+| reason | when |
+|---|---|
+| `bad_activity_missing_field` | `date`, `time_zone` or `move_mode` absent |
+| `bad_activity_move_mode` | a mode outside the closed set — never defaulted |
+| `bad_activity_unknown_field` | an unexpected key inside `activity` |
+| `bad_activity_bad_value` | a negative ring or goal |
+| `bad_activity_*` | a non-finite number, or an unusable date or zone |
 
 ### Integration note
 

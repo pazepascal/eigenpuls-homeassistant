@@ -156,6 +156,37 @@
           "yoga": "Yoga",
           "other": "Sonstiges"
         }
+      },
+      "activity_move_energy": {
+        "name": "Bewegen-Energie"
+      },
+      "activity_move_energy_goal": {
+        "name": "Bewegen-Energie-Ziel"
+      },
+      "activity_move_time": {
+        "name": "Bewegen-Zeit"
+      },
+      "activity_move_time_goal": {
+        "name": "Bewegen-Zeit-Ziel"
+      },
+      "activity_exercise_time": {
+        "name": "Trainingsminuten"
+      },
+      "activity_exercise_goal": {
+        "name": "Trainingsminuten-Ziel"
+      },
+      "activity_stand_hours": {
+        "name": "Stehstunden"
+      },
+      "activity_stand_goal": {
+        "name": "Stehstunden-Ziel"
+      },
+      "activity_move_mode": {
+        "name": "Bewegen-Modus",
+        "state": {
+          "active_energy": "Aktive Energie",
+          "move_time": "Bewegungszeit"
+        }
       }
     }
   }

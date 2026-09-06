@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 
 from .payload import (
+    ACTIVITY_SNAPSHOT_FIELDS,
     BloodPressureSnapshot,
     DailyTotalSnapshot,
     LastWorkout,
@@ -51,6 +52,17 @@ class HealthState:
     sleep_trend: SleepTrend | None = None
     #: One correlated reading, never assembled from two independent halves.
     blood_pressure: BloodPressureSnapshot | None = None
+
+    #: Latest activity ring values, keyed by metric id, **merged** rather than
+    #: replaced. A field absent from a snapshot leaves its previous value alone;
+    #: an explicit 0.0 overwrites. Those are different facts - one day in a
+    #: measured week had no summary at all while another had every ring at zero -
+    #: and whole-object replacement would collapse them into the same thing.
+    activity_values: dict[str, float] = field(default_factory=dict)
+    #: Which series is the Move ring, from the last activity snapshot received.
+    activity_move_mode: str | None = None
+    activity_day: date | None = None
+    activity_time_zone: str | None = None
     last_workout: LastWorkout | None = None
     #: Measurement-weighted rolling averages, derived by Home Assistant from its
     #: own durable history rather than sent by the phone. Keyed by period in days.
@@ -98,6 +110,17 @@ class HealthState:
             self.blood_pressure = snapshot.blood_pressure
         if snapshot.last_workout is not None:
             self.last_workout = snapshot.last_workout
+
+        if (activity := snapshot.activity) is not None:
+            self.activity_move_mode = activity.move_mode
+            self.activity_day = activity.day
+            self.activity_time_zone = activity.time_zone
+            # Field by field, not by assignment. A value the snapshot did not
+            # carry is not a value of zero, and must not clear what is shown.
+            for field_name, metric in ACTIVITY_SNAPSHOT_FIELDS.items():
+                value = getattr(activity, field_name)
+                if value is not None:
+                    self.activity_values[metric] = value
 
         self.last_sync = received_at
 

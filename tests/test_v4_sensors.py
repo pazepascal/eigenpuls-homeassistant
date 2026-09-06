@@ -59,6 +59,22 @@ def populated_state() -> HealthState:
             metric=metric, value=value, unit=METRICS[metric].unit,
             day=date(2026, 6, 10), time_zone=TZ,
         )
+    # Activity rings. Values live in a merged dict rather than a snapshot
+    # object, which is how an absent field leaves the previous value alone.
+    state.activity_values.update({
+        "activity_move_energy": 388.0,
+        "activity_move_energy_goal": 600.0,
+        "activity_move_time": 42.0,
+        "activity_move_time_goal": 30.0,
+        "activity_exercise_time": 47.0,
+        "activity_exercise_goal": 30.0,
+        "activity_stand_hours": 9.0,
+        "activity_stand_goal": 12.0,
+    })
+    state.activity_move_mode = "active_energy"
+    state.activity_day = date(2026, 6, 10)
+    state.activity_time_zone = TZ
+
     state.last_workout = LastWorkout(
         uuid="F1A2", activity="strength_training",
         start=datetime(2026, 6, 10, 17, 0, tzinfo=UTC),
@@ -97,7 +113,7 @@ def build(state: HealthState) -> list[AppleHealthSensor]:
 
 def test_every_sensor_builds_and_reports_a_value():
     sensors = build(populated_state())
-    assert len(sensors) == 29
+    assert len(sensors) == 38
 
     for sensor in sensors:
         # Both properties are exercised: a typo in either lambda raises here.

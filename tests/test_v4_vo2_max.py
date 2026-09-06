@@ -183,7 +183,7 @@ class TestNothingElseMoved:
         assert metric in METRICS
 
     def test_the_registry_grew_by_exactly_one(self) -> None:
-        assert len(METRICS) == 18
+        assert len(METRICS) == 26  # 18 at VO2 max, +8 Activity in 4A.2
 
     def test_percent_metrics_are_unchanged(self) -> None:
         assert PERCENT_METRICS == frozenset(

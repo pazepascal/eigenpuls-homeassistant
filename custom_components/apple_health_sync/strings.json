@@ -156,6 +156,37 @@
           "yoga": "Yoga",
           "other": "Other"
         }
+      },
+      "activity_move_energy": {
+        "name": "Move Energy"
+      },
+      "activity_move_energy_goal": {
+        "name": "Move Energy Goal"
+      },
+      "activity_move_time": {
+        "name": "Move Time"
+      },
+      "activity_move_time_goal": {
+        "name": "Move Time Goal"
+      },
+      "activity_exercise_time": {
+        "name": "Exercise Time"
+      },
+      "activity_exercise_goal": {
+        "name": "Exercise Goal"
+      },
+      "activity_stand_hours": {
+        "name": "Stand Hours"
+      },
+      "activity_stand_goal": {
+        "name": "Stand Goal"
+      },
+      "activity_move_mode": {
+        "name": "Move Mode",
+        "state": {
+          "active_energy": "Active Energy",
+          "move_time": "Move Time"
+        }
       }
     }
   }

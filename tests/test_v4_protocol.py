@@ -630,8 +630,10 @@ def test_the_daily_ceiling_accommodates_every_metric_across_the_widest_window():
         for offset in range(-13, 1)
     ]
     # Twelve daily metrics: naps and the three training aggregates included.
-    assert len(daily) == 168
-    assert len(parse(envelope(buckets=buckets(daily=daily)), now=NOW).history.daily) == 168
+    # Twenty daily metrics now, the eight Activity series included. 280 of a
+    # 400 ceiling - still headroom, and worth watching as Phase 4 continues.
+    assert len(daily) == 280
+    assert len(parse(envelope(buckets=buckets(daily=daily)), now=NOW).history.daily) == 280
 
 
 def test_too_many_nights_are_refused():
