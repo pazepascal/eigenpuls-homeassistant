@@ -167,18 +167,62 @@ def test_a_v4_payload_cannot_use_the_v3_bucket_keys():
 # --- 4 / 5 / 6: the registry is a closed contract ---------------------------
 
 
-def test_an_unknown_metric_is_rejected_not_ignored():
+def test_an_unknown_metric_is_reported_not_ignored():
+    """Still never silent - but no longer fatal.
+
+    The original rule was "reject rather than ignore", and the point of it was
+    that a metric this receiver does not understand must never be quietly
+    dropped. That point is preserved: the bucket comes back in ``rejected`` and
+    the client surfaces the count.
+
+    What changed is that it no longer takes the rest of the delivery with it. A
+    newer client naming a metric this version has not learned yet is version
+    skew, not a protocol violation, and an App Store update reaches a phone long
+    before a HACS update reaches the instance behind it.
+    """
     body = envelope(buckets=buckets(daily=[day("blood_glucose", total=5.4)]))
-    with pytest.raises(PayloadError) as err:
-        parse(body, now=NOW)
-    assert err.value.reason == "unknown_metric"
+    payload = parse(body, now=NOW)
+
+    assert [r.reason for r in payload.rejected] == ["unknown_metric"]
+    assert payload.rejected[0].collection == "daily"
+    assert payload.history.daily == []
 
 
-def test_an_unknown_metric_in_the_hourly_family_is_also_rejected():
+def test_an_unknown_metric_in_the_hourly_family_is_also_reported():
     body = envelope(buckets=buckets(hourly=[hour(metric="body_temperature")]))
+    payload = parse(body, now=NOW)
+
+    assert [r.reason for r in payload.rejected] == ["unknown_metric"]
+    assert payload.rejected[0].collection == "hourly"
+    assert payload.history.hourly == []
+
+
+def test_a_known_metric_survives_an_unknown_one_beside_it():
+    """The whole reason the rule changed.
+
+    Before this, one unrecognised name cost every other metric in the delivery.
+    """
+    body = envelope(
+        buckets=buckets(
+            daily=[day("steps", total=1000), day("blood_glucose", total=5.4)]
+        )
+    )
+    payload = parse(body, now=NOW)
+
+    assert [b.metric for b in payload.history.daily] == ["steps"]
+    assert [r.reason for r in payload.rejected] == ["unknown_metric"]
+
+
+def test_a_malformed_bucket_is_still_fatal():
+    """Only an unknown *metric* is tolerated. Everything else is unchanged.
+
+    A missing metric key is a malformed request, not version skew, and the
+    strictness that catches it must not be loosened by association.
+    """
+    body = envelope(buckets=buckets(daily=[{"date": "2026-05-29", "total": 1}]))
     with pytest.raises(PayloadError) as err:
         parse(body, now=NOW)
-    assert err.value.reason == "unknown_metric"
+    assert err.value.reason == "bad_bucket_missing_field"
 
 
 def test_a_daily_metric_sent_as_an_hourly_bucket_is_rejected():

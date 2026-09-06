@@ -1147,11 +1147,25 @@ def _reject_duplicates(keys: list[Any], reason: str) -> None:
         raise PayloadError(reason)
 
 
-def _parse_history(raw: Any, *, now: datetime, version: int) -> AggregateHistory:
+def _parse_history(
+    raw: Any, *, now: datetime, version: int, rejected: list[Rejection] | None = None
+) -> AggregateHistory:
     """Aggregate history is validated strictly and rejected as a whole.
 
-    Unlike samples, a bad bucket fails the entire request: the caller applies
-    nothing unless every bucket is sound (validate-all-then-apply).
+    Unlike samples, a *malformed* bucket fails the entire request: the caller
+    applies nothing unless every bucket is sound (validate-all-then-apply).
+
+    **One exception, added deliberately.** A v4 bucket that is perfectly well
+    formed but names a metric this receiver has never heard of is recorded as a
+    per-item rejection instead of failing the delivery. That case is not a
+    protocol violation, it is a newer client talking to an older receiver - the
+    normal state during a rollout, because an App Store update reaches a phone
+    long before a HACS update reaches the instance behind it.
+
+    Losing every other metric because of one unrecognised name was the wrong
+    trade. This is not the "silently drop it" that the strictness was protecting
+    against: the bucket is reported back in ``rejected``, the client surfaces the
+    count, and nothing is stored under a guessed meaning.
 
     v3 and v4 differ only in how the buckets are keyed on the wire. Both produce
     the same metric-keyed buckets, so the two versions share one storage path and
@@ -1199,14 +1213,12 @@ def _parse_history(raw: Any, *, now: datetime, version: int) -> AggregateHistory
         if len(nightly) > MAX_NIGHTLY_BUCKETS:
             raise PayloadError("too_many_nightly_buckets")
 
-        history.hourly = [
-            _parse_hour_bucket(item, now=now, metric=_bucket_metric(item))
-            for item in hourly
-        ]
-        history.daily = [
-            _parse_day_bucket(item, now=now, metric=_bucket_metric(item))
-            for item in daily
-        ]
+        history.hourly = _parse_known_buckets(
+            hourly, "hourly", _parse_hour_bucket, now=now, rejected=rejected
+        )
+        history.daily = _parse_known_buckets(
+            daily, "daily", _parse_day_bucket, now=now, rejected=rejected
+        )
         history.nightly = [_parse_nightly(item, now=now) for item in nightly]
 
     # Per-metric ceiling, checked after parsing because the wire arrays are
@@ -1229,6 +1241,34 @@ def _parse_history(raw: Any, *, now: datetime, version: int) -> AggregateHistory
     _reject_duplicates([n.day for n in history.nightly], "duplicate_nightly_bucket")
     _check_blood_pressure_pairs(history)
     return history
+
+
+def _parse_known_buckets(
+    items: list[Any],
+    collection: str,
+    parse_one: Any,
+    *,
+    now: datetime,
+    rejected: list[Rejection] | None,
+) -> list[Any]:
+    """Parses v4 buckets, setting aside the ones naming an unknown metric.
+
+    Only an unknown *metric* is set aside. A bucket that is malformed, has the
+    wrong shape for its family, or carries an unexpected field still fails the
+    whole request - those are protocol violations rather than version skew, and
+    the strictness that catches them is unchanged.
+    """
+    parsed: list[Any] = []
+    for index, item in enumerate(items):
+        # A missing or malformed metric key is a schema error, not version skew.
+        metric = _bucket_metric(item)
+        if registry.spec_for(metric) is None:
+            if rejected is None:
+                raise PayloadError("unknown_metric")
+            rejected.append(Rejection(index, collection, "unknown_metric"))
+            continue
+        parsed.append(parse_one(item, now=now, metric=metric))
+    return parsed
 
 
 def _check_blood_pressure_pairs(history: AggregateHistory) -> None:
@@ -1259,18 +1299,20 @@ def _check_blood_pressure_pairs(history: AggregateHistory) -> None:
 
 
 def _bucket_metric(item: Any) -> str:
-    """The metric identifier a v4 bucket declares.
+    """The metric identifier a v4 bucket declares, validated as a *shape* only.
 
-    An unknown identifier is rejected here rather than skipped: skipping it would
-    return HTTP 200 while dropping whatever it carried.
+    Whether the identifier is one this receiver knows is decided by the caller,
+    not here. The two questions used to be answered together, and that is what
+    made an unrecognised metric fatal: a newer client naming a metric this
+    version has not learned yet is version skew, while a missing or non-string
+    ``metric`` key is a malformed request. Only the second is a protocol
+    violation.
     """
     if not isinstance(item, dict):
         raise PayloadError("bad_bucket")
     metric = item.get("metric")
     if not isinstance(metric, str) or not metric:
         raise PayloadError("bad_bucket_missing_field")
-    if registry.spec_for(metric) is None:
-        raise PayloadError("unknown_metric")
     return metric
 
 
@@ -1332,7 +1374,9 @@ def parse(body: Any, *, now: datetime | None = None) -> ParsedPayload:
             )
 
     if version >= 3 and (raw_buckets := body.get("buckets")) is not None:
-        payload.history = _parse_history(raw_buckets, now=now, version=version)
+        payload.history = _parse_history(
+            raw_buckets, now=now, version=version, rejected=payload.rejected
+        )
 
     for index, item in enumerate(_collection(body.get("samples"), "samples", MAX_SAMPLES)):
         try:

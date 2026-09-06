@@ -17,6 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, SIGNAL_UPDATE
 from .payload import MAX_BODY_BYTES, WIRE_VERSION, PayloadError, parse
+from .registry import SUPPORTED_FEATURES, SUPPORTED_METRICS
 from .statistics import async_blood_pressure_trend, async_import_history
 
 _LOGGER = logging.getLogger(__name__)
@@ -160,6 +161,12 @@ def _make_handler(entry: ConfigEntry):
                     "ok": True,
                     "pong": True,
                     "version": WIRE_VERSION,
+                    # What this receiver understands. A client that reads these
+                    # can withhold anything newer instead of losing a delivery
+                    # to it. Absent in every release before this one, which the
+                    # client must read as "assume only the v4 baseline".
+                    "supported_metrics": list(SUPPORTED_METRICS),
+                    "supported_features": list(SUPPORTED_FEATURES),
                     "accepted": {"samples": 0, "daily_totals": 0, "deletions": 0},
                     "rejected": [],
                     "server_time": _server_time(),
@@ -238,6 +245,10 @@ def _make_handler(entry: ConfigEntry):
             {
                 "ok": True,
                 "version": payload.version,
+                # Also on the sync response, so a client that never pings still
+                # learns what this receiver takes.
+                "supported_metrics": list(SUPPORTED_METRICS),
+                "supported_features": list(SUPPORTED_FEATURES),
                 "completed": completed,
                 "accepted": {
                     "samples": len(payload.samples),

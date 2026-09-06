@@ -402,5 +402,34 @@ STATISTIC_IDS: Final = frozenset(
 
 
 def spec_for(metric: str) -> MetricSpec | None:
-    """Registry lookup. ``None`` means unknown, which is always an error."""
+    """Registry lookup. ``None`` means unknown."""
     return METRICS.get(metric)
+
+
+#: Every metric id this receiver can store, reported to the client so it can
+#: avoid sending anything this version does not know.
+#:
+#: The client is the one that has to act on this: an iOS update reaches a phone
+#: long before a HACS update reaches the instance behind it, so "new client, old
+#: receiver" is the normal rollout state rather than an edge case. Without this
+#: list the client has no way to find out, and a single unrecognised metric used
+#: to cost the whole delivery.
+SUPPORTED_METRICS: Final[tuple[str, ...]] = tuple(sorted(METRICS))
+
+#: Additive wire features beyond the metric registry.
+#:
+#: A metric list cannot describe everything a future client might add. A
+#: structured snapshot object - the planned ``activity`` block is the immediate
+#: case - is not a metric, and an older receiver ignores unknown snapshot keys
+#: *silently*, so the client would believe it had transmitted something that was
+#: quietly discarded. Naming these features explicitly is what lets the client
+#: tell "understood" from "silently dropped".
+#:
+#: Everything listed here shipped in v4 and is therefore safe for any receiver
+#: that reports the list at all. Later features are appended, never renamed.
+SUPPORTED_FEATURES: Final[tuple[str, ...]] = (
+    "buckets.nightly",
+    "snapshot.blood_pressure",
+    "snapshot.last_workout",
+    "snapshot.sleep_trend",
+)

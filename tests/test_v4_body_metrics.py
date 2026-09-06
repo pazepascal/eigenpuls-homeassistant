@@ -402,11 +402,18 @@ def test_a_body_metric_payload_coexists_with_everything_else():
     assert parsed.snapshot.blood_pressure.diastolic == 82.0
 
 
-def test_an_unknown_metric_is_still_rejected_loudly():
-    """The registry stays closed; these additions did not loosen it."""
-    with pytest.raises(PayloadError) as err:
-        parse(envelope(buckets={"hourly": [hour("bone_density", mean=1.2)]}), now=NOW)
-    assert err.value.reason == "unknown_metric"
+def test_an_unknown_metric_is_still_reported_loudly():
+    """The registry stays closed; these additions did not loosen it.
+
+    "Loudly" now means reported in ``rejected`` rather than fatal to the whole
+    delivery - see ``test_v4_protocol`` for why that trade changed. Nothing is
+    stored under a guessed meaning either way.
+    """
+    payload = parse(
+        envelope(buckets={"hourly": [hour("bone_density", mean=1.2)]}), now=NOW
+    )
+    assert [r.reason for r in payload.rejected] == ["unknown_metric"]
+    assert payload.history.hourly == []
 
 
 @pytest.mark.parametrize("version", [1, 2, 3])

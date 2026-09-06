@@ -434,18 +434,69 @@ versions share one storage path and the older format cannot drift from the newer
 one. This is asserted directly: the parsed result of a v3 and a v4 payload
 carrying the same data must be equal.
 
-Deployment order is unchanged and matters: **receiver first**, then Test
-Connection, then the client.
+Deployment order still matters for a *new wire version*: **receiver first**,
+then Test Connection, then the client.
+
+### 8.1 Forward compatibility — the receiver says what it understands
+
+Ordering the deployment is advice Pascal can follow on his own instance. It is
+not something a shipped app can rely on: an App Store update reaches a phone long
+before a HACS update reaches the Home Assistant behind it, so **a newer client
+talking to an older receiver is the ordinary state during a rollout.**
+
+Every response — both `ping` and `sync` — therefore carries what this receiver
+can take:
+
+```json
+"supported_metrics": ["active_energy", "blood_pressure_diastolic", "…"],
+"supported_features": ["buckets.nightly", "snapshot.blood_pressure",
+                       "snapshot.last_workout", "snapshot.sleep_trend"]
+```
+
+`supported_metrics` lists every metric id the registry accepts.
+`supported_features` names additive wire features that are **not** metrics — a
+structured snapshot object is the case that forced it to exist.
+
+**Both lists are needed, because the two surfaces fail in opposite ways.** An
+unknown bucket metric is reported; an unknown snapshot key is *silently ignored*
+and returns HTTP 200. A client that only knew the metric list could therefore
+send a new snapshot object, be told everything was fine, and have it discarded.
+
+**A receiver that sends neither field is a legitimate older receiver, not an
+error.** The client must then fall back to the frozen v4 baseline set rather than
+assuming support.
+
+Features are appended, never renamed or removed. A feature appears in the list
+only when the receiver genuinely implements it: a list that over-promises would
+be worse than no list, because the client would send and lose.
 
 ## 9. Validation and failure model
 
 Unchanged from v3, and now covering the new families.
 
-Aggregate history is **all-or-nothing**. One malformed bucket fails the whole
-request; nothing is applied. Unlike raw samples, a bucket is never individually
-rejected into a `rejected` list.
+Aggregate history is **all-or-nothing for anything malformed**. One malformed
+bucket fails the whole request; nothing is applied.
 
-Reason codes added in this cycle: `bad_bucket_unknown_field`,
+**One deliberate exception, added with §8.1.** A v4 bucket that is perfectly well
+formed but names a metric this receiver does not know is recorded as a per-item
+`rejected` entry instead of failing the delivery. That is version skew, not a
+protocol violation, and losing every other metric to one unrecognised name was
+the wrong trade.
+
+This is *not* the silent drop the strictness was protecting against. The bucket
+is reported back in `rejected`, the client surfaces the count, and nothing is
+stored under a guessed meaning. Everything else is unchanged and still fatal:
+
+| case | outcome |
+|---|---|
+| unknown metric id, valid bucket | `rejected` entry, rest of the delivery stored |
+| malformed bucket / missing field | **fatal**, `bad_bucket_missing_field` |
+| unknown bucket family | **fatal**, `unknown_bucket_kind` |
+| unexpected field in a known bucket | **fatal**, `bad_bucket_unknown_field` |
+| unexpected field in a nightly bucket | **fatal**, `bad_nightly_unknown_field` |
+| unsupported envelope version | **fatal**, `unsupported_version` |
+
+Reason codes added in earlier cycles: `bad_bucket_unknown_field`,
 `bad_nightly_unknown_field` (§4).
 
 Ordering is load-bearing: the durable window is imported **before** anything

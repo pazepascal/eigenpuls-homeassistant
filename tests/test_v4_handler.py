@@ -206,7 +206,7 @@ async def test_a_malformed_night_is_rejected_before_anything_is_written(record, 
     dispatch.assert_not_called()
 
 
-async def test_an_unknown_metric_fails_the_whole_request():
+async def test_an_unknown_metric_no_longer_fails_the_whole_request():
     entry, dispatch = make_entry(), mock.Mock()
     body = v4(buckets={"daily": [
         {"metric": "steps", "date": datetime.now(UTC).date().isoformat(),
@@ -217,11 +217,16 @@ async def test_an_unknown_metric_fails_the_whole_request():
 
     response, payload, importer = await post(body, entry, dispatch)
 
-    assert response.status == 400
-    assert payload["error"] == "unknown_metric"
-    # Validate-all-then-apply: the good bucket is not stored either.
-    importer.assert_not_awaited()
-    dispatch.assert_not_called()
+    # The known bucket is stored; the unrecognised one is reported back.
+    #
+    # This assertion used to read `status == 400` and `importer.assert_not_awaited()`
+    # - validate-all-then-apply, one unknown name costing the whole delivery.
+    # That is the wrong trade once a newer client can reach an older receiver,
+    # which is the normal rollout state rather than an edge case.
+    assert response.status == 200
+    assert [r["reason"] for r in payload["rejected"]] == ["unknown_metric"]
+    importer.assert_awaited()
+    dispatch.assert_called()
 
 
 async def test_a_ping_still_changes_nothing_under_v4():
