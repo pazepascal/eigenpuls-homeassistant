@@ -505,6 +505,102 @@ snapshot is applied, `last_sync` does not advance and no entity update is
 dispatched — so a failed sleep import can never be reported to the person as a
 completed sync.
 
+## 9a. Activity Summary — reserved, not implemented
+
+Reserved in Phase 4A.1 so both halves agree before either builds it. **This
+receiver release implements none of it:** the registry carries no activity
+metric, `SUPPORTED_FEATURES` does not list `snapshot.activity`, and a client that
+sent these today would have them rejected per-metric under §9. The client
+withholds them for the same reason — the feature is not published, so the whole
+source stays back.
+
+### Eight daily metrics
+
+| metric | family | unit | unit_class | mean | sum |
+|---|---|---|---|---|---|
+| `activity_move_energy` | daily cumulative | kcal | energy | none | yes |
+| `activity_move_energy_goal` | daily discrete, mean only | kcal | energy | arithmetic | no |
+| `activity_move_time` | daily cumulative | min | duration | none | yes |
+| `activity_move_time_goal` | daily discrete, mean only | min | duration | arithmetic | no |
+| `activity_exercise_time` | daily cumulative | min | duration | none | yes |
+| `activity_exercise_goal` | daily discrete, mean only | min | duration | arithmetic | no |
+| `activity_stand_hours` | daily cumulative | hours | — | none | yes |
+| `activity_stand_goal` | daily discrete, mean only | hours | — | arithmetic | no |
+
+`activity_stand_hours` has **no unit class**, and that is deliberate. HealthKit
+reports it as a count, and it is a count — of hours that qualified, not of time
+elapsed. Giving it `duration` would let Home Assistant convert nine stand hours
+into 540 minutes, which is arithmetic without meaning. It follows the
+`steps` / `naps` / `workouts` convention instead.
+
+Goals are mean-only daily discrete: a day's goal is one value, so a min/max
+spread would be invented, and it accumulates nothing.
+
+All eight carry `snapshot_key: ""`. The current-value view is the composite
+object below, exactly as blood pressure and `last_workout` already do it.
+
+### `snapshot.activity`
+
+```json
+"activity": {
+  "date": "2026-09-06", "time_zone": "Europe/Berlin",
+  "move_mode": "active_energy",
+  "move_energy": 388.8, "move_energy_goal": 600,
+  "move_time": 42, "move_time_goal": 30,
+  "exercise_time": 42, "exercise_goal": 30,
+  "stand_hours": 9, "stand_goal": 12
+}
+```
+
+`date`, `time_zone` and `move_mode` are required when the object is present.
+Every value is optional.
+
+### Move mode decides which series is the ring
+
+`HKActivitySummary.activityMoveMode` is `active_energy` or `move_time`, sent as a
+stable string and never as Apple's numeric enum. It names which series **is** the
+Move ring. Both series travel whenever the summary carries them — withholding one
+would make the payload depend on a setting that can change between days — but
+only the named one is the ring.
+
+**`activity_move_energy` is not `active_energy` and the two must never merge.**
+`active_energy` is the sum of Active Energy samples over the local day from a
+statistics query, and works without an Apple Watch. `activity_move_energy` is
+Apple's own Move-ring figure, with Apple's day boundary and pause handling. They
+usually agree, they answer different questions, and in `move_time` mode
+`active_energy` is not the ring at all.
+
+### Absence, zero and missing goals
+
+Measured on a real device: across a seven-day window one day had **no summary
+object at all** while another had **all three rings at zero**. Those are different
+facts and the difference is load-bearing.
+
+- no summary for a day → no bucket for that day, and no snapshot
+- a summary carrying zero → a bucket carrying `0`
+- a nullable goal absent (`exerciseTimeGoal`, `standHoursGoal`, iOS 16+) → no goal
+  bucket and no snapshot field. Never `0`, never a default, never interpolated
+  from another day. The deprecated `appleExerciseTimeGoal` / `appleStandHoursGoal`
+  are not used.
+
+### Day boundary
+
+Apple's own assignment via `dateComponentsForCalendar:`, never reconstructed from
+UTC timestamps. Carried as the ordinary v4 daily bucket — local date plus
+`time_zone` — so 23- and 25-hour days remain HealthKit's arithmetic, and Phase 5
+backfill needs no new shape.
+
+### No percentages
+
+No `move_percent`, `exercise_percent` or `stand_percent`. Home Assistant derives
+value over goal from two statistics, and a stored percentage becomes historically
+wrong the moment a goal changes.
+
+### Integration note
+
+Apple's guidance applies to anyone building on this: the data may be used, but a
+dashboard must not imitate the Activity ring graphic.
+
 ## 10. Limits
 
 | limit | value |
