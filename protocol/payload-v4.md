@@ -625,6 +625,8 @@ dashboard must not imitate the Activity ring graphic.
 
 ## 9b. Phase 4B: the last four catalogue metrics
 
+Released in 1.5.0.
+
 Four ordinary metrics in three shapes that already existed. No new bucket
 family, no new snapshot composite, no new read path — deliberately, because
 Activity was the hard one and these should not have been.
@@ -685,6 +687,8 @@ CGM integration. A value far outside any normal range is still the value Apple
 Health holds and is stored exactly as sent.
 
 ## 9c. Phase 4C: training by category
+
+Released in 1.5.0.
 
 A snapshot composite under `workout_categories`, carrying the training
 breakdown for the rolling 90-day workout window.
