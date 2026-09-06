@@ -758,6 +758,60 @@ does not flicker between syncs. The full breakdown rides in its attributes.
 No routes, no locations, no per-workout heart-rate curves. §9's exclusions are
 unchanged.
 
+## 9d. Phase 6B: heart-rate recovery, lean body mass, height, temperature
+
+Four more hourly-discrete metrics, all sparse, all taking a shape that already
+exists. Apple's own annotations in `HKTypeIdentifiers.h` decided each one:
+
+| wire metric | HealthKit type | header annotation | wire unit |
+|---|---|---|---|
+| `heart_rate_recovery` | `HeartRateRecoveryOneMinute` (iOS 16+) | `count/min, Discrete (Arithmetic)` | `bpm` |
+| `lean_body_mass` | `LeanBodyMass` | `kg, Discrete (Arithmetic)` | `kg` |
+| `height` | `Height` | `m, Discrete (Arithmetic)` | `cm` |
+| `body_temperature` | `BodyTemperature` | `degC, Discrete (Arithmetic)` | `°C` |
+
+### Recovery is arithmetic where heart rate is not
+
+Both are heart rates in `count/min`, so giving recovery heart rate's shape would
+look obviously right. The header marks heart rate *Temporally Weighted* and
+recovery *Arithmetic*, because recovery is one derived number per workout rather
+than a signal sampled over time. Weighting occurrences by duration would mean
+nothing.
+
+### Body temperature is one of four types, and they are not interchangeable
+
+HealthKit has `WaterTemperature`, `BasalBodyTemperature`,
+`AppleSleepingWristTemperature` and `BodyTemperature`. Only the last is what
+this metric carries.
+
+`WaterTemperature` is not a body measurement. `BasalBodyTemperature` belongs to
+cycle tracking. `AppleSleepingWristTemperature` is the interesting one and the
+trap: an Apple Watch records it automatically every night, so it is the type
+most people actually have data for — but it is a *wrist* temperature taken
+during sleep, which the Health app presents as a deviation from a personal
+baseline. Its absolute value runs well below core temperature, so publishing it
+as "body temperature" would be wrong by roughly two degrees while looking
+entirely plausible.
+
+Carrying it is defensible under its own name and as its own series. It is not
+carried here, and merging it into this one would be a data error rather than a
+product decision.
+
+### Height is read in centimetres
+
+HealthKit's canonical unit is metres. The client asks for centimetres so that
+HealthKit performs the conversion rather than the client doing arithmetic — the
+same choice walking distance makes with kilometres — and so Home Assistant's
+`distance` converter can offer feet and inches to anyone who wants them. A
+metres/centimetres slip is a factor of a hundred and would survive a glance.
+
+### Nothing here is computed from anything else
+
+Lean body mass is not body mass minus fat, and height does not feed BMI. Both
+reconstructions are arithmetically obvious and both would produce numbers that
+disagree with the Health app — the second one whenever a stored height is stale.
+Apple stores all three; the bridge transports all three.
+
 ## 10. Limits
 
 | limit | value |
@@ -774,7 +828,8 @@ seven daily metrics across the widest 14-day recovery window is 98 buckets, whic
 the v3 ceiling of 40 would have refused.
 
 As of Phase 4B there are **22 daily series**, naps included, so a full 14-day
-window is 308 of the 400 available.
+window is 308 of the 400 available. Phase 6B added no daily series — all four of
+its metrics are hourly — so this figure is unchanged.
 
 The figure that runs out first is not this ceiling but the client's per-metric
 allowance, which divides the ceiling by the daily series count. At 29 series a
@@ -789,9 +844,27 @@ The hourly ceilings are two-tier and both are enforced by **rejecting** an
 oversized request, never by trimming. Per metric first, so one series can never
 squeeze out another — trimming a combined array would drop whole metrics rather
 than old buckets, which is a silent loss of exactly the kind this protocol
-exists to prevent. A dense heart-rate series needs 336 buckets for a full 14-day
-recovery window, and the sparse body metrics use a fraction of their allowance,
-so a realistic combined upload sits far inside the total envelope.
+exists to prevent.
+
+**The total is no longer comfortable, and Phase 6B is where that changed.**
+There are now **16 hourly series**, and the per-metric allowance permits
+16 × 400 = 6400 against a total of 2000 — so the ceilings alone do not keep a
+delivery legal. What kept it legal was that the sparse metrics stay sparse, and
+that was true when three of them were.
+
+Counted rather than assumed, for someone who tracks intensively over the sparse
+metrics' 90-day horizon: heart rate 336, a CGM at its 400 cap, two blood
+pressure series at 180 each, body mass / body fat / BMI / lean body mass at 90
+each, heart-rate recovery around 65, VO2 max around 13, height 1, temperature a
+handful. That is roughly **1,900 of 2,000**. It fits, and it no longer fits with
+room to spare.
+
+So the client mirrors the total ceiling as well as the per-metric one, and trims
+to it by raising a shared cap until the total fits — which clips the densest
+series and leaves every sparse one whole. That is the only trimming shape that
+does not silently drop a metric, which is why the receiver still refuses rather
+than trims: the receiver cannot know which series a person cares about, and the
+client does not have to guess because it can shorten the densest instead.
 
 A full v4 window is roughly 38 KB — about 27× inside the body limit, so it still
 travels as a single request.

@@ -229,13 +229,30 @@ def test_blood_glucose_carries_no_range_check_and_no_interpretation():
 
 
 def test_bmi_is_read_and_never_derived_from_the_body_metrics_beside_it():
-    """No relationship is asserted between BMI, body mass and height.
+    """BMI is Apple's stored value, not weight over height squared.
 
-    Height is not a metric this bridge carries at all, so there is nothing to
-    compute from — which is the intended state. If BMI ever started being
-    derived, this test would need deleting, and that deletion is the review.
+    This test used to rest on there being nothing to compute from: height was
+    not carried at all. Phase 6B added it, so the ingredients are now both
+    present and the temptation is real - which makes the invariant worth more
+    than it was, not less.
+
+    So it is asserted as behaviour rather than as an absence. A delivery
+    carrying body mass and height and no BMI must produce no BMI. A derived one
+    would disagree with the Health app whenever the stored height is stale, and
+    a number that contradicts Apple's own is worse than no number.
     """
-    assert "height" not in METRICS
+    assert {"body_mass", "height", "bmi"} <= set(METRICS)
+
+    body = envelope(buckets={"hourly": [
+        hour("body_mass", mean=78.0, min=78.0, max=78.0),
+        hour("height", mean=182.0, min=182.0, max=182.0),
+    ]})
+    payload = parse(body, now=NOW)
+
+    assert not payload.rejected
+    assert {b.metric for b in payload.history.hourly} == {"body_mass", "height"}
+    assert "bmi" not in payload.snapshot.measurements
+
     assert METRICS["bmi"].kind is METRICS["body_mass"].kind
     assert METRICS["bmi"].snapshot_key == "bmi"
 
@@ -245,7 +262,7 @@ def test_bmi_is_read_and_never_derived_from_the_body_metrics_beside_it():
 
 def test_the_four_are_additive_and_nothing_moved():
     """Every id is new; no existing series was renamed to make room."""
-    assert len(METRICS) == 30
+    assert len(METRICS) == 34  # 30 after 4B, +4 in 6B
     for metric in PHASE_4B:
         assert METRICS[metric].statistic_suffix == metric
     # The ids that already exist on Pascal's instance, spot-checked at both ends

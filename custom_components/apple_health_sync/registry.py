@@ -385,6 +385,40 @@ METRICS: Final[dict[str, MetricSpec]] = {
         # statement. A number and its unit.
         _discrete("blood_glucose", "blood_glucose", "Blood glucose", "mg/dL",
                   "blood_glucose_concentration", BucketKind.HOURLY_DISCRETE),
+        # --- Phase 6B: the last four of the catalogue ---
+        #
+        # All four are "Discrete (Arithmetic)" in `HKTypeIdentifiers.h`, and all
+        # four are sparse, so they take the shape the body metrics already have.
+        #
+        # `bpm` has no Home Assistant converter, like resting heart rate, so the
+        # unit class is None and nothing is scaled on the way out. Worth saying
+        # why this one is arithmetic when heart rate is temporally weighted: it
+        # is one derived number per workout, not a signal sampled over time.
+        _discrete("heart_rate_recovery", "heart_rate_recovery",
+                  "Heart rate recovery", "bpm", None,
+                  BucketKind.HOURLY_DISCRETE),
+        # Mass, like body mass. Distinct from it and not derivable from it: lean
+        # body mass is what a scale that measures composition reports, and a
+        # person can hold one without the other.
+        _discrete("lean_body_mass", "lean_body_mass", "Lean body mass", "kg",
+                  "mass", BucketKind.HOURLY_DISCRETE),
+        # Centimetres, which Home Assistant converts for anyone who reads in
+        # feet and inches. Hourly like the rest rather than daily, because the
+        # alternative is a daily row for a number that changes once a decade.
+        _discrete("height", "height", "Height", "cm", "distance",
+                  BucketKind.HOURLY_DISCRETE),
+        # HealthKit has four temperature types and they are not
+        # interchangeable: `WaterTemperature` is not a body measurement at all,
+        # `BasalBodyTemperature` belongs to cycle tracking, and
+        # `AppleSleepingWristTemperature` is an overnight wrist reading that the
+        # Health app presents as a deviation from a personal baseline - its
+        # absolute value runs well below core temperature and labelling it
+        # "body temperature" would be wrong by about two degrees.
+        #
+        # This series is `HKQuantityTypeIdentifierBodyTemperature` alone: the
+        # literal reading someone takes with a thermometer. Sparse by nature.
+        _discrete("body_temperature", "body_temperature", "Body temperature",
+                  "°C", "temperature", BucketKind.HOURLY_DISCRETE),
     )
 }
 

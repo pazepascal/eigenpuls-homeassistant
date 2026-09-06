@@ -240,6 +240,38 @@
       "unit_class": "energy",
       "mean_type": "none",
       "has_sum": true
+    },
+    "heart_rate_recovery": {
+      "statistic_id": "apple_health_sync:heart_rate_recovery",
+      "kind": "hourly_discrete",
+      "unit": "bpm",
+      "unit_class": null,
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "lean_body_mass": {
+      "statistic_id": "apple_health_sync:lean_body_mass",
+      "kind": "hourly_discrete",
+      "unit": "kg",
+      "unit_class": "mass",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "height": {
+      "statistic_id": "apple_health_sync:height",
+      "kind": "hourly_discrete",
+      "unit": "cm",
+      "unit_class": "distance",
+      "mean_type": "arithmetic",
+      "has_sum": false
+    },
+    "body_temperature": {
+      "statistic_id": "apple_health_sync:body_temperature",
+      "kind": "hourly_discrete",
+      "unit": "°C",
+      "unit_class": "temperature",
+      "mean_type": "arithmetic",
+      "has_sum": false
     }
   },
   "sleep_series": {

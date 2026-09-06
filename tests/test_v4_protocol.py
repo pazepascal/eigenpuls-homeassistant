@@ -189,7 +189,7 @@ def test_an_unknown_metric_is_reported_not_ignored():
 
 
 def test_an_unknown_metric_in_the_hourly_family_is_also_reported():
-    body = envelope(buckets=buckets(hourly=[hour(metric="body_temperature")]))
+    body = envelope(buckets=buckets(hourly=[hour(metric="not_a_metric")]))
     payload = parse(body, now=NOW)
 
     assert [r.reason for r in payload.rejected] == ["unknown_metric"]
